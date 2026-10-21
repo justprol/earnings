@@ -68,7 +68,7 @@ nav.tabs [role=tab][aria-selected="true"]{color:var(--fg);border-bottom-color:va
 .row .top{display:flex;align-items:baseline;gap:8px;min-width:0}
 .row .tk{font-family:var(--f-num);font-weight:600}
 .row .tk{font-size:16px}
-.row .tags{margin-top:1px}
+.row .tags{margin-left:auto;flex:none;flex-wrap:nowrap;align-self:center}
 .row .nm{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .row .hl{font-size:13.5px;line-height:1.55;color:var(--fg);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .chips{display:flex;gap:4px;flex-wrap:wrap}
@@ -153,11 +153,8 @@ details.memo a{color:var(--accent);word-break:break-all}
 .ev .nm small{color:var(--muted);margin-left:6px}
 .ev button.link{appearance:none;border:0;background:none;padding:0;color:var(--accent);font-weight:600;font-size:12px;text-decoration:underline}
 .tags{display:inline-flex;gap:4px;flex-wrap:wrap;vertical-align:middle}
-.tag2{font-size:12px;font-weight:700;line-height:1.5;padding:1px 8px;border-radius:5px;border:1px solid transparent;white-space:nowrap}
-.tag2.AP{background:var(--t-ap-soft);color:var(--t-ap);border-color:color-mix(in srgb,var(--t-ap) 45%,transparent)}
-.tag2.MP{background:var(--t-mp);color:var(--t-mp-on)}
-.tag2.Universe{background:var(--t-un-soft);color:var(--t-un);border-color:color-mix(in srgb,var(--t-un) 40%,transparent)}
-.tag2.BR{background:var(--t-br-soft);color:var(--t-br);border-color:color-mix(in srgb,var(--t-br) 45%,transparent)}
+.tag2{font-size:11px;font-weight:600;line-height:1.55;padding:0 6px;border-radius:4px;border:1px solid var(--line-strong);color:var(--muted);background:transparent;white-space:nowrap;letter-spacing:.01em}
+.tag2.MP{border-color:var(--accent);color:var(--accent)}
 .legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12.5px;color:var(--muted)}
 .legend .it{display:inline-flex;align-items:center;gap:6px}
 .mhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
@@ -179,7 +176,6 @@ details.memo a{color:var(--accent);word-break:break-all}
 .mt span.done{background:var(--accent-soft);color:var(--accent)}
 .mt span.wait{background:var(--warn-soft);color:var(--warn)}
 .mt span.est{background:transparent;outline:1px dashed var(--line-strong);outline-offset:-1px;color:var(--muted)}
-.mt span.l-MP{border-left-color:var(--t-mp)} .mt span.l-AP{border-left-color:var(--t-ap)} .mt span.l-Universe{border-left-color:var(--t-un)} .mt span.l-BR{border-left-color:var(--t-br)}
 .mt .more{background:none;color:var(--muted);border:0;padding:0 2px}
 .mcount{display:none;font-family:var(--f-num);font-size:12px;font-weight:600;color:var(--accent)}
 .daypanel{border-top:1px solid var(--line-strong)}
@@ -236,7 +232,7 @@ details.memo a{color:var(--accent);word-break:break-all}
     <div><b>가이던스</b>회사가 직접 밝힌 다음 분기·연간 실적 전망. 이 숫자가 예상보다 낮으면 실적이 좋아도 주가가 빠지는 경우가 많음.</div>
     <div><b>bp(베이시스포인트)</b>0.01%p. 100bp = 1%p. 이익률이 30.0%→31.5%면 +150bp.</div>
     <div><b>장 전 / 장 마감 후</b>미국 정규장(09:30~16:00 동부시간) 시작 전 또는 마감 후 발표. 장 마감 후 발표는 한국시간 다음날 새벽.</div>
-    <div><b>AP · MP · Universe · B/R 표시</b>종목이 글로벌자산운용실 시트의 AP, MP(예건·다연), Universe, Brief/Report 탭에 있는지 표시. 색이 채워진 MP는 실제 보유 포트폴리오.</div>
+    <div><b>AP · MP · Universe · B/R 표시</b>종목이 글로벌자산운용실 시트의 AP, MP(예건·다연), Universe, Brief/Report 탭에 있는지 표시. AP 종목은 모두 Universe에도 있어 AP만 표시함. 강조색 MP는 보유 포트폴리오.</div>
     <div><b>색 표기</b>미국 시장 관례대로 초록은 좋음(상승·예상 상회), 빨강은 나쁨(하락·예상 하회).</div>
     <div><b>시간외·장전 반응</b>정규장 밖 거래에서의 주가 변화. 거래량이 적어 정규장에서 방향이 바뀌기도 함.</div>
   </section>
@@ -250,7 +246,6 @@ details.memo a{color:var(--accent);word-break:break-all}
         <option value="">EPS 결과 전체</option><option value="상회">EPS 예상 상회</option><option value="부합">EPS 예상 부합</option><option value="하회">EPS 예상 하회</option>
       </select>
     </div>
-    <div class="legend" aria-label="구분 표시 설명"><span>구분 표시:</span><span class="it"><span class="tag2 AP">AP</span></span><span class="it"><span class="tag2 MP">MP</span>보유 포트폴리오</span><span class="it"><span class="tag2 Universe">Universe</span></span><span class="it"><span class="tag2 BR">B/R</span>Brief/Report</span><span>· 색: <b class="pos">초록 = 좋음</b> / <b class="neg">빨강 = 나쁨</b></span></div>
     <div class="split">
       <div class="list" id="list" aria-label="실적 목록">
         <div class="empty"><strong>데이터를 불러오는 중</strong><span>잠시만 기다려 주세요.</span></div>
@@ -273,7 +268,6 @@ details.memo a{color:var(--accent);word-break:break-all}
       <select id="c-sector" aria-label="섹터"><option value="">전체 섹터</option></select>
       <select id="c-list" aria-label="구분"><option value="">전체 구분</option><option value="AP">AP</option><option value="MP">MP</option><option value="Universe">Universe</option><option value="BR">Brief/Report</option><option value="none">어느 탭에도 없음</option></select>
     </div>
-    <div class="legend" aria-label="구분 표시 설명"><span>구분 표시:</span><span class="it"><span class="tag2 AP">AP</span></span><span class="it"><span class="tag2 MP">MP</span>보유 포트폴리오</span><span class="it"><span class="tag2 Universe">Universe</span></span><span class="it"><span class="tag2 BR">B/R</span>Brief/Report</span><span>· 색: <b class="pos">초록 = 좋음</b> / <b class="neg">빨강 = 나쁨</b></span></div>
     <p class="calnote" id="calnote"></p>
     <div class="cal" id="calwrap"><div class="empty"><strong>발표 일정을 불러오는 중</strong></div></div>
     <details class="memo" id="undated" hidden><summary></summary><p class="calnote" style="margin:0 0 8px">아래 종목은 아직 발표일을 확인하지 못함. 자동 실행이 회사 IR 공지를 확인하는 대로 일정표에 추가됨.</p><div class="tk-cloud" id="undated-list"></div></details>
@@ -291,7 +285,7 @@ details.memo a{color:var(--accent);word-break:break-all}
   let reports=[],calendar=[],selected=null,meta=null,lists={};
   const LORDER=[['AP','AP'],['MP','MP'],['Universe','Universe'],['BR','B/R']];
   const inL=(t,k)=>(lists[k]||[]).includes(t);
-  const tagsFor=t=>{const h=LORDER.filter(([k])=>inL(t,k)).map(([k,l])=>`<span class="tag2 ${k}" title="${k==='BR'?'Brief/Report':k} 탭">${l}</span>`).join('');return h?`<span class="tags">${h}</span>`:'';};
+  const tagsFor=t=>{const h=LORDER.filter(([k])=>inL(t,k)&&!(k==='Universe'&&inL(t,'AP'))).map(([k,l])=>`<span class="tag2 ${k}" title="${k==='BR'?'Brief/Report':k} 탭">${l}</span>`).join('');return h?`<span class="tags">${h}</span>`:'';};
   const listOk=(t,v)=>!v||(v==='none'?!LORDER.some(([k])=>inL(t,k)):inL(t,v));
   try{selected=localStorage.getItem('et-sel');}catch(e){}
 
@@ -315,7 +309,7 @@ details.memo a{color:var(--accent);word-break:break-all}
       if(r.reportDate!==day){day=r.reportDate;html+=`<div class="daygrp">${esc(day)} 발표</div>`;}
       const v=r.verdict||{};
       html+=`<div class="row" tabindex="0" role="button" data-id="${esc(r._id)}" aria-current="${r._id===selected}">
-        <div class="top"><span class="tk">${esc(r.ticker)}</span><span class="nm">${esc(r.name)}</span></div>${tagsFor(r.ticker)}
+        <div class="top"><span class="tk">${esc(r.ticker)}</span><span class="nm">${esc(r.name)}</span>${tagsFor(r.ticker)}</div>
         <div class="chips">${v.revenue&&v.revenue!=='확인 불가'?`<span class="chip ${vcls(v.revenue)}">매출 ${esc(v.revenue)}</span>`:''}${v.eps&&v.eps!=='확인 불가'?`<span class="chip ${vcls(v.eps)}">EPS ${esc(v.eps)}</span>`:''}${r.status==='partial'?'<span class="chip warn">보완 중</span>':''}</div>
         <div class="hl">${esc(r.headline)}</div></div>`;
     }
@@ -430,7 +424,7 @@ details.memo a{color:var(--accent);word-break:break-all}
       const dt=new Date(Y,Mo-1,day),g=dt.getDay();if(!wk&&(g===0||g===6))continue;
       const ds=`${Y}-${pad(Mo)}-${pad(day)}`,evs=(by[ds]||[]);monthTotal+=evs.length;
       const lim=evs.length>9?8:9;
-      const chips=evs.slice(0,lim).map(c=>{const has=c.lastReportId&&rep.has(c.lastReportId);const cls=has?'done':ds<t0?'wait':!c.confirmed?'est':'';const l=firstList(c.ticker);return `<span class="${cls}${l?' l-'+l:''}" title="${esc(c.name)} · ${esc(timing(c.timing))}">${esc(c.ticker)}</span>`;}).join('')+(evs.length>lim?`<span class="more">+${evs.length-lim}</span>`:'');
+      const chips=evs.slice(0,lim).map(c=>{const has=c.lastReportId&&rep.has(c.lastReportId);const cls=has?'done':ds<t0?'wait':!c.confirmed?'est':'';return `<span class="${cls}" title="${esc(c.name)} · ${esc(timing(c.timing))}">${esc(c.ticker)}</span>`;}).join('')+(evs.length>lim?`<span class="more">+${evs.length-lim}</span>`:'');
       cells.push(`<button class="mcell${ds===t0?' today':''}${ds===calSel?' sel':''}" data-day="${ds}" aria-label="${Mo}월 ${day}일 발표 ${evs.length}건"><span class="dn">${day}${evs.length?`<small>${evs.length}건</small>`:''}</span><div class="mt">${chips}</div>${evs.length?`<span class="mcount">${evs.length}</span>`:''}</button>`);
     }
     while(cells.length%cols)cells.push('<div class="mcell out" aria-hidden="true"></div>');
@@ -439,7 +433,7 @@ details.memo a{color:var(--accent);word-break:break-all}
     $('#calwrap').innerHTML=`<div class="mhead"><h3>${Y}년 ${Mo}월 <span style="font-size:13px;font-weight:500;color:var(--muted);font-family:var(--f-body)">· ${monthTotal}건</span></h3><div class="nav"><button data-mv="-1" aria-label="이전 달">‹</button><button data-mv="0">이번 달</button><button data-mv="1" aria-label="다음 달">›</button></div></div>
       <div class="mgrid" style="--cols:${cols}">${dows.map(g=>`<div class="dow">${DOW[g]}</div>`).join('')}${cells.join('')}</div>
       ${panel}
-      <div class="mlegend legend"><span>칸 안 티커:</span><span class="it"><span class="sw" style="background:var(--accent-soft);color:var(--accent)">TSM</span>요약 있음</span><span class="it"><span class="sw" style="background:var(--warn-soft);color:var(--warn)">IBM</span>발표 완료·정리 대기</span><span class="it"><span class="sw" style="background:var(--flat-soft)">AMZN</span>예정(확정)</span><span class="it"><span class="sw" style="outline:1px dashed var(--line-strong);outline-offset:-1px;color:var(--muted)">COST</span>예정(추정)</span><span>· 왼쪽 색 막대 = <b style="color:var(--t-mp)">MP</b> · <b style="color:var(--t-ap)">AP</b> · <b style="color:var(--t-un)">Universe</b> · <b style="color:var(--t-br)">B/R</b></span></div>`;
+      <div class="mlegend legend"><span class="it"><span class="sw" style="background:var(--accent-soft);color:var(--accent)">TSM</span>요약 있음</span><span class="it"><span class="sw" style="background:var(--warn-soft);color:var(--warn)">IBM</span>발표 완료·정리 대기</span><span class="it"><span class="sw" style="background:var(--flat-soft)">AMZN</span>예정(확정)</span><span class="it"><span class="sw" style="outline:1px dashed var(--line-strong);outline-offset:-1px;color:var(--muted)">COST</span>예정(추정)</span></div>`;
   }
   function renderCal(){
     const t0=etToday(),q=$('#cq').value.trim().toLowerCase(),sec=$('#c-sector').value,cl=$('#c-list').value;
