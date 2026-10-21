@@ -14,7 +14,7 @@
   --bg:#eef2f1; --surface:#ffffff; --sunken:#f4f7f6; --line:#dbe3e0; --line-strong:#b9c6c2;
   --fg:#18211f; --muted:#56655f; --faint:#8a9894;
   --accent:#1f5f5b; --accent-soft:#dcebe8;
-  --up:#c8322b; --up-soft:#fbe6e4; --down:#2259b8; --down-soft:#e3ebfa; --flat:#5f6866; --flat-soft:#eceeed;
+  --up:#167a45; --up-soft:#e2f3e9; --down:#c8322b; --down-soft:#fbe6e4; --flat:#5f6866; --flat-soft:#eceeed;
   --warn:#8a5a00; --warn-soft:#fbf0d9;
   --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   --f-num:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
@@ -23,13 +23,13 @@
   --bg:#0f1514; --surface:#18211f; --sunken:#1d2725; --line:#2b3835; --line-strong:#3c4c48;
   --fg:#e6eeeb; --muted:#a2b2ad; --faint:#71817c;
   --accent:#7cc4bc; --accent-soft:#1d3532;
-  --up:#ff7a70; --up-soft:#3a1f1d; --down:#7ea9ff; --down-soft:#1b2843; --flat:#a7b0ad; --flat-soft:#262f2d;
+  --up:#4fcf8c; --up-soft:#163427; --down:#ff7a70; --down-soft:#3a1f1d; --flat:#a7b0ad; --flat-soft:#262f2d;
   --warn:#e8b860; --warn-soft:#3a2f17; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f1514; --surface:#18211f; --sunken:#1d2725; --line:#2b3835; --line-strong:#3c4c48;
   --fg:#e6eeeb; --muted:#a2b2ad; --faint:#71817c;
   --accent:#7cc4bc; --accent-soft:#1d3532;
-  --up:#ff7a70; --up-soft:#3a1f1d; --down:#7ea9ff; --down-soft:#1b2843; --flat:#a7b0ad; --flat-soft:#262f2d;
+  --up:#4fcf8c; --up-soft:#163427; --down:#ff7a70; --down-soft:#3a1f1d; --flat:#a7b0ad; --flat-soft:#262f2d;
   --warn:#e8b860; --warn-soft:#3a2f17; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.65}
@@ -66,6 +66,7 @@ nav.tabs [role=tab][aria-selected="true"]{color:var(--fg);border-bottom-color:va
 .row[aria-current="true"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
 .row .top{display:flex;align-items:baseline;gap:8px;min-width:0}
 .row .tk{font-family:var(--f-num);font-weight:600}
+.row .tags{flex:none;flex-wrap:nowrap}
 .row .nm{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .row .hl{font-size:13px;color:var(--fg);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .chips{display:flex;gap:4px;flex-wrap:wrap}
@@ -148,6 +149,10 @@ details.memo a{color:var(--accent);word-break:break-all}
 .ev .nm{font-size:13.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ev .nm small{color:var(--muted);margin-left:6px}
 .ev button.link{appearance:none;border:0;background:none;padding:0;color:var(--accent);font-weight:600;font-size:12px;text-decoration:underline}
+.tags{display:inline-flex;gap:3px;flex-wrap:wrap;vertical-align:middle}
+.tag2{font-size:10.5px;font-weight:700;letter-spacing:.02em;padding:1px 6px;border-radius:4px;border:1px solid var(--line-strong);color:var(--muted);background:var(--surface);white-space:nowrap}
+.tag2.AP{border-color:var(--accent);color:var(--accent)}
+.tag2.MP{border-color:var(--accent);background:var(--accent);color:var(--surface)}
 .tk-cloud{display:flex;flex-wrap:wrap;gap:6px}
 .tk-cloud span{font-family:var(--f-num);font-size:12.5px;background:var(--sunken);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
 @media (max-width:640px){.calday{grid-template-columns:minmax(0,1fr)}.calday .d{flex-direction:row;gap:8px;align-items:baseline;border-right:0;border-bottom:1px solid var(--line)}.ev{grid-template-columns:56px minmax(0,1fr) auto}.ev .tm{display:none}}
@@ -196,6 +201,8 @@ details.memo a{color:var(--accent);word-break:break-all}
     <div><b>가이던스</b>회사가 직접 밝힌 다음 분기·연간 실적 전망. 이 숫자가 예상보다 낮으면 실적이 좋아도 주가가 빠지는 경우가 많음.</div>
     <div><b>bp(베이시스포인트)</b>0.01%p. 100bp = 1%p. 이익률이 30.0%→31.5%면 +150bp.</div>
     <div><b>장 전 / 장 마감 후</b>미국 정규장(09:30~16:00 동부시간) 시작 전 또는 마감 후 발표. 장 마감 후 발표는 한국시간 다음날 새벽.</div>
+    <div><b>AP · MP · Universe · B/R 표시</b>종목이 글로벌자산운용실 시트의 AP, MP(예건·다연), Universe, Brief/Report 탭에 있는지 표시. 색이 채워진 MP는 실제 보유 포트폴리오.</div>
+    <div><b>색 표기</b>미국 시장 관례대로 초록은 좋음(상승·예상 상회), 빨강은 나쁨(하락·예상 하회).</div>
     <div><b>시간외·장전 반응</b>정규장 밖 거래에서의 주가 변화. 거래량이 적어 정규장에서 방향이 바뀌기도 함.</div>
   </section>
 
@@ -203,6 +210,7 @@ details.memo a{color:var(--accent);word-break:break-all}
     <div class="toolbar">
       <input id="q" type="search" placeholder="티커·종목명 검색" aria-label="검색">
       <select id="f-sector" aria-label="섹터"><option value="">전체 섹터</option></select>
+      <select id="f-list" aria-label="구분"><option value="">전체 구분</option><option value="AP">AP</option><option value="MP">MP</option><option value="Universe">Universe</option><option value="BR">Brief/Report</option><option value="none">어느 탭에도 없음</option></select>
       <select id="f-verdict" aria-label="EPS 결과">
         <option value="">EPS 결과 전체</option><option value="상회">EPS 예상 상회</option><option value="부합">EPS 예상 부합</option><option value="하회">EPS 예상 하회</option>
       </select>
@@ -224,6 +232,7 @@ details.memo a{color:var(--accent);word-break:break-all}
       </div>
       <input id="cq" type="search" placeholder="티커·종목명 검색" aria-label="일정 검색">
       <select id="c-sector" aria-label="섹터"><option value="">전체 섹터</option></select>
+      <select id="c-list" aria-label="구분"><option value="">전체 구분</option><option value="AP">AP</option><option value="MP">MP</option><option value="Universe">Universe</option><option value="BR">Brief/Report</option><option value="none">어느 탭에도 없음</option></select>
     </div>
     <p class="calnote" id="calnote"></p>
     <div class="cal" id="calwrap"><div class="empty"><strong>발표 일정을 불러오는 중</strong></div></div>
@@ -239,7 +248,11 @@ details.memo a{color:var(--accent);word-break:break-all}
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const NA=v=>v==null||v===''||/^확인 불가/.test(String(v).trim());
   const show=v=>NA(v)?'<span class="na">—</span>':esc(v);
-  let reports=[],calendar=[],selected=null,meta=null;
+  let reports=[],calendar=[],selected=null,meta=null,lists={};
+  const LORDER=[['AP','AP'],['MP','MP'],['Universe','Universe'],['BR','B/R']];
+  const inL=(t,k)=>(lists[k]||[]).includes(t);
+  const tagsFor=t=>{const h=LORDER.filter(([k])=>inL(t,k)).map(([k,l])=>`<span class="tag2 ${k}" title="${k==='BR'?'Brief/Report':k} 탭">${l}</span>`).join('');return h?`<span class="tags">${h}</span>`:'';};
+  const listOk=(t,v)=>!v||(v==='none'?!LORDER.some(([k])=>inL(t,k)):inL(t,v));
   try{selected=localStorage.getItem('et-sel');}catch(e){}
 
   const V={ '상회':['up','예상 상회'],'하회':['down','예상 하회'],'부합':['flat','예상 부합'],'상향':['up','예상보다 높게 제시'],'하향':['down','예상보다 낮게 제시'],'유지':['flat','예상과 비슷'],'미제시':['flat','전망 미제시'],'확인 불가':['warn','비교 자료 없음'] };
@@ -252,8 +265,8 @@ details.memo a{color:var(--accent);word-break:break-all}
   const findMetric=(r,re)=>(r.metrics||[]).find(m=>re.test(m.label||''));
 
   function renderList(){
-    const q=$('#q').value.trim().toLowerCase(),sec=$('#f-sector').value,vd=$('#f-verdict').value;
-    const rows=reports.filter(r=>(!q||(r.ticker||'').toLowerCase().includes(q)||(r.name||'').toLowerCase().includes(q))&&(!sec||r.sector===sec)&&(!vd||(r.verdict&&r.verdict.eps)===vd))
+    const q=$('#q').value.trim().toLowerCase(),sec=$('#f-sector').value,vd=$('#f-verdict').value,fl=$('#f-list').value;
+    const rows=reports.filter(r=>(!q||(r.ticker||'').toLowerCase().includes(q)||(r.name||'').toLowerCase().includes(q))&&(!sec||r.sector===sec)&&(!vd||(r.verdict&&r.verdict.eps)===vd)&&listOk(r.ticker,fl))
       .sort((a,b)=>(b.reportDate||'').localeCompare(a.reportDate||'')||(a.ticker||'').localeCompare(b.ticker||''));
     const el=$('#list');
     if(!rows.length){el.innerHTML=`<div class="empty"><strong>${reports.length?'조건에 맞는 종목 없음':'아직 정리된 실적 없음'}</strong><span>${reports.length?'검색어나 필터를 바꿔 보세요.':'자동 실행이 발표 종목을 찾으면 여기에 추가됩니다.'}</span></div>`;return;}
@@ -262,7 +275,7 @@ details.memo a{color:var(--accent);word-break:break-all}
       if(r.reportDate!==day){day=r.reportDate;html+=`<div class="daygrp">${esc(day)} 발표</div>`;}
       const v=r.verdict||{};
       html+=`<div class="row" tabindex="0" role="button" data-id="${esc(r._id)}" aria-current="${r._id===selected}">
-        <div class="top"><span class="tk">${esc(r.ticker)}</span><span class="nm">${esc(r.name)}</span></div>
+        <div class="top"><span class="tk">${esc(r.ticker)}</span>${tagsFor(r.ticker)}<span class="nm">${esc(r.name)}</span></div>
         <div class="chips">${v.revenue&&v.revenue!=='확인 불가'?`<span class="chip ${vcls(v.revenue)}">매출 ${esc(v.revenue)}</span>`:''}${v.eps&&v.eps!=='확인 불가'?`<span class="chip ${vcls(v.eps)}">EPS ${esc(v.eps)}</span>`:''}${r.status==='partial'?'<span class="chip warn">보완 중</span>':''}</div>
         <div class="hl">${esc(r.headline)}</div></div>`;
     }
@@ -309,7 +322,7 @@ details.memo a{color:var(--accent);word-break:break-all}
     let n=0;const N=()=>++n;
     let html=`<section class="card">
       <button class="back" id="back">← 목록으로</button>
-      <div class="title"><h2>${esc(r.name)}</h2><span class="tk">${esc(r.ticker)}</span><span class="chip acc">${esc(r.period)}</span></div>
+      <div class="title"><h2>${esc(r.name)}</h2><span class="tk">${esc(r.ticker)}</span>${tagsFor(r.ticker)}<span class="chip acc">${esc(r.period)}</span></div>
       <div class="meta"><span>${esc(r.reportDate)} ${esc(timing(r.timing))} 발표(미국 동부시간)</span><span>${esc(r.sector||'')}${r.industry?' · '+esc(r.industry):''}</span><span>정리 ${esc(fmtKST(r.updatedAt||r.generatedAt))}</span></div>
       ${r.status==='partial'?'<div class="notice">어닝콜 내용이 아직 공개되지 않아 일부 항목이 비어 있음. 다음 자동 실행(최대 5일)에서 채워짐.</div>':''}
       <p class="headline">${esc(r.headline)}</p>
@@ -339,7 +352,7 @@ details.memo a{color:var(--accent);word-break:break-all}
   function select(id){selected=id;try{localStorage.setItem('et-sel',id);}catch(e){}document.body.classList.add('show-detail');renderList();renderDetail();if(window.innerWidth<=820)window.scrollTo({top:0});}
   $('#list').addEventListener('click',e=>{const r=e.target.closest('.row');if(r)select(r.dataset.id);});
   $('#list').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const r=e.target.closest('.row');if(r){e.preventDefault();select(r.dataset.id);}}});
-  ['#q','#f-sector','#f-verdict'].forEach(s=>$(s).addEventListener('input',renderList));
+  ['#q','#f-sector','#f-verdict','#f-list'].forEach(s=>$(s).addEventListener('input',renderList));
   function setTab(w){const rep=w==='reports';$('#tab-reports').setAttribute('aria-selected',rep);$('#tab-cal').setAttribute('aria-selected',!rep);$('#view-reports').hidden=!rep;$('#view-cal').hidden=rep;$('#view-cal').style.display=rep?'':'flex';}
   $('#tab-reports').onclick=()=>setTab('reports');$('#tab-cal').onclick=()=>setTab('cal');
   if(location.hash==='#calendar')setTab('cal');
@@ -351,9 +364,9 @@ details.memo a{color:var(--accent);word-break:break-all}
   function etToday(){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
   const TO={BMO:0,AMC:1};
   function renderCal(){
-    const t0=etToday(),q=$('#cq').value.trim().toLowerCase(),sec=$('#c-sector').value;
+    const t0=etToday(),q=$('#cq').value.trim().toLowerCase(),sec=$('#c-sector').value,cl=$('#c-list').value;
     const rep=new Set(reports.map(r=>r._id));
-    let rows=calendar.filter(c=>c.nextDate&&(!q||c.ticker.toLowerCase().includes(q)||(c.name||'').toLowerCase().includes(q))&&(!sec||c.sector===sec));
+    let rows=calendar.filter(c=>c.nextDate&&(!q||c.ticker.toLowerCase().includes(q)||(c.name||'').toLowerCase().includes(q))&&(!sec||c.sector===sec)&&listOk(c.ticker,cl));
     if(calWhen==='past') rows=rows.filter(c=>c.nextDate<t0||c.state==='요약 완료');
     if(calWhen==='next') rows=rows.filter(c=>c.nextDate>=t0&&c.state!=='요약 완료');
     rows.sort((a,b)=>calWhen==='past'?(b.nextDate.localeCompare(a.nextDate)||((TO[a.timing]??2)-(TO[b.timing]??2))):(a.nextDate.localeCompare(b.nextDate)||((TO[a.timing]??2)-(TO[b.timing]??2))||a.ticker.localeCompare(b.ticker)));
@@ -370,13 +383,13 @@ details.memo a{color:var(--accent);word-break:break-all}
           else if(d<t0) chip='<span class="chip warn">발표 완료 · 정리 대기</span>';
           else if(!c.confirmed) chip='<span class="chip">예정(추정)</span>';
           else chip=`<span class="chip ${isT?'acc':''}">${isT?'오늘 발표':'예정'}</span>`;
-          return `<div class="ev"><span class="tm">${esc(timing(c.timing))}</span><span class="tk">${esc(c.ticker)}</span><span class="nm">${esc(c.name)}<small>${esc(c.sector||'')}</small></span>${chip}</div>`;}).join('')}</div></div>`;}).join('');
+          return `<div class="ev"><span class="tm">${esc(timing(c.timing))}</span><span class="tk">${esc(c.ticker)}</span><span class="nm">${tagsFor(c.ticker)} ${esc(c.name)}<small>${esc(c.sector||'')}</small></span>${chip}</div>`;}).join('')}</div></div>`;}).join('');
     }
     const und=(meta&&meta.undated)||[];
-    if(und.length){$('#undated').hidden=false;$('#undated summary').textContent=`일정 미확인 종목 ${und.length}개`;$('#undated-list').innerHTML=und.map(t=>`<span>${esc(t)}</span>`).join('');}
+    if(und.length){$('#undated').hidden=false;$('#undated summary').textContent=`일정 미확인 종목 ${und.length}개`;$('#undated-list').innerHTML=und.map(t=>`<span>${esc(t)} ${tagsFor(t)}</span>`).join('');}
   }
   document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{calWhen=b.dataset.when;document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderCal();});
-  $('#cq').addEventListener('input',()=>renderCal());$('#c-sector').addEventListener('input',()=>renderCal());
+  $('#cq').addEventListener('input',()=>renderCal());$('#c-sector').addEventListener('input',()=>renderCal());$('#c-list').addEventListener('input',()=>renderCal());
   $('#calwrap').addEventListener('click',e=>{const b=e.target.closest('[data-open]');if(b){setTab('reports');select(b.dataset.open);}});
   function renderCalSectors(){const secs=[...new Set(calendar.map(c=>c.sector).filter(Boolean))].sort();$('#c-sector').innerHTML='<option value="">전체 섹터</option>'+secs.map(x=>`<option>${esc(x)}</option>`).join('');}
   function renderStats(){
@@ -390,7 +403,7 @@ details.memo a{color:var(--accent);word-break:break-all}
       const res=await fetch('data.json?v='+Date.now(),{cache:'no-store'});if(!res.ok)throw new Error(res.status);
       const data=await res.json();meta=data.meta||null;
       reports=(data.reports||[]).map(r=>Object.assign({_id:r.id||(r.ticker+'_'+String(r.period||'').replace(/\s/g,''))},r));
-      calendar=data.calendar||[];
+      calendar=data.calendar||[];lists=data.lists||{};
       if(!reports.some(r=>r._id===selected)&&window.innerWidth>820&&reports.length){selected=[...reports].sort((a,b)=>(b.reportDate||'').localeCompare(a.reportDate||''))[0]._id;}
       renderSectors();renderCalSectors();renderList();renderDetail();renderCal();renderStats();
     }catch(e){$('#list').innerHTML='<div class="empty"><strong>데이터를 불러오지 못함</strong><span>잠시 후 새로고침해 주세요.</span></div>';}
