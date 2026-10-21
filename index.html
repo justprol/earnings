@@ -128,7 +128,30 @@ details.memo a{color:var(--accent);word-break:break-all}
 .notice{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:13.5px}
 .empty{padding:44px 24px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:6px;align-items:center}
 .empty strong{color:var(--fg);font-size:16px}
-.cal{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.cal{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{appearance:none;border:0;background:none;color:var(--muted);font-size:14px;font-weight:600;padding:7px 12px;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.calnote{margin:0;color:var(--muted);font-size:13px;max-width:90ch}
+.calday{display:grid;grid-template-columns:120px minmax(0,1fr);border-bottom:1px solid var(--line)}
+.calday:last-child{border-bottom:0}
+.calday .d{padding:12px 14px;background:var(--sunken);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.calday .d b{font-family:var(--f-num);font-size:15px}
+.calday .d span{font-size:12px;color:var(--muted)}
+.calday.today .d{background:var(--accent-soft)}
+.calday .evs{display:flex;flex-direction:column}
+.ev{display:grid;grid-template-columns:70px 64px minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line)}
+.ev:last-child{border-bottom:0}
+.ev .tm{font-size:12px;color:var(--muted)}
+.ev .tk{font-family:var(--f-num);font-weight:600}
+.ev .nm{font-size:13.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev .nm small{color:var(--muted);margin-left:6px}
+.ev button.link{appearance:none;border:0;background:none;padding:0;color:var(--accent);font-weight:600;font-size:12px;text-decoration:underline}
+.tk-cloud{display:flex;flex-wrap:wrap;gap:6px}
+.tk-cloud span{font-family:var(--f-num);font-size:12.5px;background:var(--sunken);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+@media (max-width:640px){.calday{grid-template-columns:minmax(0,1fr)}.calday .d{flex-direction:row;gap:8px;align-items:baseline;border-right:0;border-bottom:1px solid var(--line)}.ev{grid-template-columns:56px minmax(0,1fr) auto}.ev .tm{display:none}}
+
 .foot{color:var(--faint);font-size:12px}
 @media (max-width:900px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:820px){
@@ -194,13 +217,17 @@ details.memo a{color:var(--accent);word-break:break-all}
     </div>
   </div>
 
-  <div id="view-cal" role="tabpanel" aria-labelledby="tab-cal" hidden>
-    <div class="cal">
-      <div class="tbl"><table>
-        <thead><tr><th>발표일(미국 동부)</th><th>시점</th><th>티커</th><th>종목명</th><th>섹터</th><th>분기</th><th>상태</th></tr></thead>
-        <tbody id="cal-body"><tr><td colspan="7"><div class="empty"><strong>발표 일정을 불러오는 중</strong></div></td></tr></tbody>
-      </table></div>
+  <div id="view-cal" role="tabpanel" aria-labelledby="tab-cal" hidden style="flex-direction:column;gap:12px">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="기간">
+        <button data-when="all" aria-pressed="true">전체</button><button data-when="past" aria-pressed="false">지난 발표</button><button data-when="next" aria-pressed="false">다가오는 발표</button>
+      </div>
+      <input id="cq" type="search" placeholder="티커·종목명 검색" aria-label="일정 검색">
+      <select id="c-sector" aria-label="섹터"><option value="">전체 섹터</option></select>
     </div>
+    <p class="calnote" id="calnote"></p>
+    <div class="cal" id="calwrap"><div class="empty"><strong>발표 일정을 불러오는 중</strong></div></div>
+    <details class="memo" id="undated" hidden><summary></summary><p class="calnote" style="margin:0 0 8px">아래 종목은 아직 발표일을 확인하지 못함. 자동 실행이 회사 IR 공지를 확인하는 대로 일정표에 추가됨.</p><div class="tk-cloud" id="undated-list"></div></details>
   </div>
 
   <p class="foot">수치는 회사 발표 자료와 공개 기사 기준입니다. 원문에서 확인하지 못한 값은 '—'로 표시하고, 사유는 각 종목 하단 '데이터 메모'에 적었습니다.</p>
@@ -313,20 +340,45 @@ details.memo a{color:var(--accent);word-break:break-all}
   $('#list').addEventListener('click',e=>{const r=e.target.closest('.row');if(r)select(r.dataset.id);});
   $('#list').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const r=e.target.closest('.row');if(r){e.preventDefault();select(r.dataset.id);}}});
   ['#q','#f-sector','#f-verdict'].forEach(s=>$(s).addEventListener('input',renderList));
-  function setTab(w){const rep=w==='reports';$('#tab-reports').setAttribute('aria-selected',rep);$('#tab-cal').setAttribute('aria-selected',!rep);$('#view-reports').hidden=!rep;$('#view-cal').hidden=rep;}
+  function setTab(w){const rep=w==='reports';$('#tab-reports').setAttribute('aria-selected',rep);$('#tab-cal').setAttribute('aria-selected',!rep);$('#view-reports').hidden=!rep;$('#view-cal').hidden=rep;$('#view-cal').style.display=rep?'':'flex';}
   $('#tab-reports').onclick=()=>setTab('reports');$('#tab-cal').onclick=()=>setTab('cal');
   if(location.hash==='#calendar')setTab('cal');
   $('#glossbtn').onclick=()=>{const g=$('#gloss');g.hidden=!g.hidden;$('#glossbtn').setAttribute('aria-expanded',!g.hidden);};
 
   function renderSectors(){const cur=$('#f-sector').value;const secs=[...new Set(reports.map(r=>r.sector).filter(Boolean))].sort();$('#f-sector').innerHTML='<option value="">전체 섹터</option>'+secs.map(s=>`<option ${s===cur?'selected':''}>${esc(s)}</option>`).join('');}
+  let calWhen='all';
+  const DOW=['일','월','화','수','목','금','토'];
+  function etToday(){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
+  const TO={BMO:0,AMC:1};
   function renderCal(){
-    const now=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));const t0=now.toISOString().slice(0,10);
-    const lim=new Date(now.getTime()+14*864e5).toISOString().slice(0,10),back=new Date(now.getTime()-3*864e5).toISOString().slice(0,10);
-    const rows=calendar.filter(c=>c.nextDate&&c.nextDate>=back&&c.nextDate<=lim).sort((a,b)=>a.nextDate.localeCompare(b.nextDate)||(a.timing||'').localeCompare(b.timing||'')||a.ticker.localeCompare(b.ticker));
-    const st={'요약 완료':'acc','대기':'warn','확인 불가':'warn'};
-    $('#cal-body').innerHTML=rows.length?rows.map(c=>`<tr><td class="mono">${esc(c.nextDate)}${c.nextDate===t0?' <span class="chip acc">오늘</span>':''}</td><td>${esc(timing(c.timing))}</td><td class="mono"><b>${esc(c.ticker)}</b></td><td>${esc(c.name)}</td><td>${esc(c.sector||'')}</td><td>${show(c.period)}</td><td><span class="chip ${st[c.state]||''}">${esc(c.state==='요약 완료'?'정리 완료':c.state||'예정')}</span></td></tr>`).join('')
-      :`<tr><td colspan="7"><div class="empty"><strong>향후 14일 발표 일정 없음</strong><span>${calendar.length?'추적 종목 중 해당 기간 발표 예정 종목이 없습니다.':'자동 실행이 실적 캘린더를 확인하면 표시됩니다.'}</span></div></td></tr>`;
+    const t0=etToday(),q=$('#cq').value.trim().toLowerCase(),sec=$('#c-sector').value;
+    const rep=new Set(reports.map(r=>r._id));
+    let rows=calendar.filter(c=>c.nextDate&&(!q||c.ticker.toLowerCase().includes(q)||(c.name||'').toLowerCase().includes(q))&&(!sec||c.sector===sec));
+    if(calWhen==='past') rows=rows.filter(c=>c.nextDate<t0||c.state==='요약 완료');
+    if(calWhen==='next') rows=rows.filter(c=>c.nextDate>=t0&&c.state!=='요약 완료');
+    rows.sort((a,b)=>calWhen==='past'?(b.nextDate.localeCompare(a.nextDate)||((TO[a.timing]??2)-(TO[b.timing]??2))):(a.nextDate.localeCompare(b.nextDate)||((TO[a.timing]??2)-(TO[b.timing]??2))||a.ticker.localeCompare(b.ticker)));
+    const total=calendar.length,done=calendar.filter(c=>c.state==='요약 완료').length,up=calendar.filter(c=>c.nextDate>=t0&&c.state!=='요약 완료').length;
+    $('#calnote').textContent=`이번 시즌(10/1~12/31, 미국 동부시간) 발표 ${total}건 · 정리 완료 ${done}건 · 다가오는 발표 ${up}건. '추정'은 회사가 날짜를 확정하기 전 예상일임.`;
+    if(!rows.length){$('#calwrap').innerHTML='<div class="empty"><strong>조건에 맞는 일정 없음</strong><span>기간·검색어·섹터를 바꿔 보세요.</span></div>';}
+    else{
+      const by={};rows.forEach(c=>(by[c.nextDate]=by[c.nextDate]||[]).push(c));
+      $('#calwrap').innerHTML=Object.keys(by).map(d=>{const dt=new Date(d+'T12:00:00');const isT=d===t0;
+        return `<div class="calday${isT?' today':''}"><div class="d"><b>${esc(d.slice(5).replace('-','/'))}</b><span>${DOW[dt.getDay()]}요일${isT?' · 오늘':''} · ${by[d].length}건</span></div><div class="evs">${by[d].map(c=>{
+          const has=c.lastReportId&&rep.has(c.lastReportId);
+          let chip;
+          if(has) chip=`<button class="link" data-open="${esc(c.lastReportId)}">요약 보기</button>`;
+          else if(d<t0) chip='<span class="chip warn">발표 완료 · 정리 대기</span>';
+          else if(!c.confirmed) chip='<span class="chip">예정(추정)</span>';
+          else chip=`<span class="chip ${isT?'acc':''}">${isT?'오늘 발표':'예정'}</span>`;
+          return `<div class="ev"><span class="tm">${esc(timing(c.timing))}</span><span class="tk">${esc(c.ticker)}</span><span class="nm">${esc(c.name)}<small>${esc(c.sector||'')}</small></span>${chip}</div>`;}).join('')}</div></div>`;}).join('');
+    }
+    const und=(meta&&meta.undated)||[];
+    if(und.length){$('#undated').hidden=false;$('#undated summary').textContent=`일정 미확인 종목 ${und.length}개`;$('#undated-list').innerHTML=und.map(t=>`<span>${esc(t)}</span>`).join('');}
   }
+  document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{calWhen=b.dataset.when;document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderCal();});
+  $('#cq').addEventListener('input',()=>renderCal());$('#c-sector').addEventListener('input',()=>renderCal());
+  $('#calwrap').addEventListener('click',e=>{const b=e.target.closest('[data-open]');if(b){setTab('reports');select(b.dataset.open);}});
+  function renderCalSectors(){const secs=[...new Set(calendar.map(c=>c.sector).filter(Boolean))].sort();$('#c-sector').innerHTML='<option value="">전체 섹터</option>'+secs.map(x=>`<option>${esc(x)}</option>`).join('');}
   function renderStats(){
     $('#st-univ').textContent=meta&&meta.universeCount!=null?meta.universeCount:'–';
     $('#st-done').textContent=reports.length;
@@ -340,7 +392,7 @@ details.memo a{color:var(--accent);word-break:break-all}
       reports=(data.reports||[]).map(r=>Object.assign({_id:r.id||(r.ticker+'_'+String(r.period||'').replace(/\s/g,''))},r));
       calendar=data.calendar||[];
       if(!reports.some(r=>r._id===selected)&&window.innerWidth>820&&reports.length){selected=[...reports].sort((a,b)=>(b.reportDate||'').localeCompare(a.reportDate||''))[0]._id;}
-      renderSectors();renderList();renderDetail();renderCal();renderStats();
+      renderSectors();renderCalSectors();renderList();renderDetail();renderCal();renderStats();
     }catch(e){$('#list').innerHTML='<div class="empty"><strong>데이터를 불러오지 못함</strong><span>잠시 후 새로고침해 주세요.</span></div>';}
   })();
 })();
