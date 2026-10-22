@@ -72,6 +72,9 @@ nav.tabs [role=tab][aria-selected="true"]{color:var(--fg);border-bottom-color:va
 .daygrp .cnt{margin-left:auto;display:flex;gap:4px;font-size:11.5px;font-weight:600}
 .daygrp .cnt b{font-family:var(--f-num);font-weight:600;padding:0 6px;border-radius:999px;background:var(--surface);color:var(--muted)}
 .daygrp .cnt b.up{background:var(--up-soft);color:var(--up)} .daygrp .cnt b.down{background:var(--down-soft);color:var(--down)}
+.chips .rx{margin-left:auto;align-self:center;display:inline-flex;align-items:baseline;gap:4px;font-family:var(--f-num);font-size:13px;font-weight:600;color:var(--flat);white-space:nowrap}
+.chips .rx small{font-family:var(--f-body);font-size:11px;font-weight:500;color:var(--faint)}
+.chips .rx.pos{color:var(--up)} .chips .rx.neg{color:var(--down)}
 .row .cap{flex:none;font-family:var(--f-num);font-size:11.5px;color:var(--faint)}
 .row{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
 .row:hover{background:var(--sunken)}
@@ -312,6 +315,7 @@ details.memo a{color:var(--accent);word-break:break-all}
   const pct=s=>{const n=parseFloat(String(s||'').replace('−','-').replace(/[^0-9.+-]/g,''));return isNaN(n)?null:n;};
   const cmpWord=s=>{const n=pct(s);if(n==null)return '';if(Math.abs(n)<=1)return '와 거의 같았음';return n>0?'보다 높았음':'보다 낮았음';};
   const fmtKST=iso=>{if(!iso)return '–';try{return new Date(iso).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});}catch(e){return iso;}};
+  const rxMini=r=>{const s=String((r.reaction||{}).initial||'').trim();const m=s.match(/^[+\-−]?\d+(?:\.\d+)?%/);if(!m)return '';const lab=((s.match(/\(([^)]*)\)/)||[])[1]||'').split(/[,·]/)[0].trim();return `<span class="rx ${sign(m[0])}" title="발표 직후 주가 반응">${esc(m[0])}${lab?`<small>${esc(lab)}</small>`:''}</span>`;};
   const findMetric=(r,re)=>(r.metrics||[]).find(m=>re.test(m.label||''));
 
   function renderList(){
@@ -334,7 +338,7 @@ details.memo a{color:var(--accent);word-break:break-all}
       const v=r.verdict||{};
       html+=`<div class="row" tabindex="0" role="button" data-id="${esc(r._id)}" aria-current="${r._id===selected}">
         <div class="top"><span class="tk">${esc(r.ticker)}</span><span class="nm">${esc(r.name)}</span><span class="cap" title="시가총액">${fmtCap(capOf(r.ticker))}</span>${tagsFor(r.ticker)}</div>
-        <div class="chips">${v.revenue&&v.revenue!=='확인 불가'?`<span class="chip ${vcls(v.revenue)}">매출 ${esc(v.revenue)}</span>`:''}${v.eps&&v.eps!=='확인 불가'?`<span class="chip ${vcls(v.eps)}">EPS ${esc(v.eps)}</span>`:''}${r.status==='partial'?'<span class="chip warn">보완 중</span>':''}</div>
+        <div class="chips">${v.revenue&&v.revenue!=='확인 불가'?`<span class="chip ${vcls(v.revenue)}">매출 ${esc(v.revenue)}</span>`:''}${v.eps&&v.eps!=='확인 불가'?`<span class="chip ${vcls(v.eps)}">EPS ${esc(v.eps)}</span>`:''}${r.status==='partial'?'<span class="chip warn">보완 중</span>':''}${rxMini(r)}</div>
         <div class="hl">${esc(r.headline)}</div></div>`;
       }
     }
