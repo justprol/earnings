@@ -61,7 +61,18 @@ nav.tabs [role=tab][aria-selected="true"]{color:var(--fg);border-bottom-color:va
 /* 목록 */
 .split{display:grid;grid-template-columns:minmax(280px,350px) minmax(0,1fr);gap:16px;align-items:start}
 .list{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;max-height:calc(100vh - 200px);overflow-y:auto;position:sticky;top:12px}
-.daygrp{padding:7px 14px;font-size:12px;font-weight:600;color:var(--muted);background:var(--sunken);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1}
+.listbar{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--surface)}
+.listbar span{margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.listbar button{white-space:nowrap;appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);font-size:12px;padding:2px 9px;border-radius:999px}
+.daygrp{appearance:none;width:100%;border:0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--fg);background:var(--sunken);text-align:left;position:sticky;top:0;z-index:1}
+.daygrp:hover{background:color-mix(in srgb,var(--sunken) 70%,var(--line))}
+.daygrp .car{display:inline-block;width:10px;color:var(--muted);transition:transform .15s}
+.daygrp[aria-expanded="true"] .car{transform:rotate(90deg)}
+.daygrp .dw{font-weight:500;color:var(--muted)}
+.daygrp .cnt{margin-left:auto;display:flex;gap:4px;font-size:11.5px;font-weight:600}
+.daygrp .cnt b{font-family:var(--f-num);font-weight:600;padding:0 6px;border-radius:999px;background:var(--surface);color:var(--muted)}
+.daygrp .cnt b.up{background:var(--up-soft);color:var(--up)} .daygrp .cnt b.down{background:var(--down-soft);color:var(--down)}
+.row .cap{flex:none;font-family:var(--f-num);font-size:11.5px;color:var(--faint)}
 .row{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
 .row:hover{background:var(--sunken)}
 .row[aria-current="true"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
@@ -286,7 +297,13 @@ details.memo a{color:var(--accent);word-break:break-all}
   const inL=(t,k)=>(lists[k]||[]).includes(t);
   const tagsFor=t=>{const h=LORDER.filter(([k])=>inL(t,k)&&!(k==='Universe'&&inL(t,'AP'))).map(([k,l])=>`<span class="tag2 ${k}" title="${k==='BR'?'Brief/Report':k} 탭">${l}</span>`).join('');return h?`<span class="tags">${h}</span>`:'';};
   const listOk=(t,v)=>!v||(v==='none'?!LORDER.some(([k])=>inL(t,k)):inL(t,v));
-  try{selected=localStorage.getItem('et-sel');}catch(e){}
+  let caps={},openDays=null;
+  try{selected=localStorage.getItem('et-sel');const o=JSON.parse(localStorage.getItem('et-open')||'null');if(Array.isArray(o))openDays=new Set(o);}catch(e){}
+  const saveOpen=()=>{try{localStorage.setItem('et-open',JSON.stringify([...openDays]));}catch(e){}};
+  const capOf=t=>caps[t]||0;
+  const fmtCap=n=>!n?'':n>=1e12?'$'+(n/1e12).toFixed(2)+'T':n>=1e11?'$'+Math.round(n/1e9)+'B':n>=1e9?'$'+(n/1e9).toFixed(1)+'B':'$'+Math.round(n/1e6)+'M';
+  const byCap=(a,b)=>capOf(b.ticker)-capOf(a.ticker)||(a.ticker||'').localeCompare(b.ticker||'');
+  const DOWK=['일','월','화','수','목','금','토'];
 
   const V={ '상회':['up','예상 상회'],'하회':['down','예상 하회'],'부합':['flat','예상 부합'],'상향':['up','예상보다 높게 제시'],'하향':['down','예상보다 낮게 제시'],'유지':['flat','예상과 비슷'],'미제시':['flat','전망 미제시'],'확인 불가':['warn','비교 자료 없음'] };
   const vcls=v=>(V[v]||['flat'])[0], vtxt=v=>(V[v]||['flat',v||'—'])[1];
@@ -300,17 +317,26 @@ details.memo a{color:var(--accent);word-break:break-all}
   function renderList(){
     const q=$('#q').value.trim().toLowerCase(),sec=$('#f-sector').value,vd=$('#f-verdict').value,fl=$('#f-list').value;
     const rows=reports.filter(r=>(!q||(r.ticker||'').toLowerCase().includes(q)||(r.name||'').toLowerCase().includes(q))&&(!sec||r.sector===sec)&&(!vd||(r.verdict&&r.verdict.eps)===vd)&&listOk(r.ticker,fl))
-      .sort((a,b)=>(b.reportDate||'').localeCompare(a.reportDate||'')||(a.ticker||'').localeCompare(b.ticker||''));
+      .sort((a,b)=>(b.reportDate||'').localeCompare(a.reportDate||'')||byCap(a,b));
     const el=$('#list');
     if(!rows.length){el.innerHTML=`<div class="empty"><strong>${reports.length?'조건에 맞는 종목 없음':'아직 정리된 실적 없음'}</strong><span>${reports.length?'검색어나 필터를 바꿔 보세요.':'자동 실행이 발표 종목을 찾으면 여기에 추가됩니다.'}</span></div>`;return;}
-    let html='',day='';
-    for(const r of rows){
-      if(r.reportDate!==day){day=r.reportDate;html+=`<div class="daygrp">${esc(day)} 발표</div>`;}
+    const groups=[];rows.forEach(r=>{const g=groups[groups.length-1];if(g&&g.d===r.reportDate)g.rows.push(r);else groups.push({d:r.reportDate,rows:[r]});});
+    if(!openDays){openDays=new Set([groups[0].d]);}
+    const filtering=!!(q||sec||vd||fl);
+    let html=`<div class="listbar"><span>날짜 ${groups.length}개 · ${rows.length}종목 · 시총 큰 순</span><button data-all="1">모두 펼치기</button><button data-all="0">모두 접기</button></div>`;
+    for(const g of groups){
+      const open=filtering||openDays.has(g.d);
+      const up=g.rows.filter(r=>(r.verdict||{}).eps==='상회').length,dn=g.rows.filter(r=>(r.verdict||{}).eps==='하회').length;
+      const dt=new Date(g.d+'T12:00:00');
+      html+=`<button class="daygrp" data-day="${esc(g.d)}" aria-expanded="${open}"><span class="car">▸</span>${esc(g.d.slice(5).replace('-','/'))} <span class="dw">${DOWK[dt.getDay()]}요일 발표</span><span class="cnt"><b>${g.rows.length}종목</b>${up?`<b class="up" title="EPS 예상 상회">상회 ${up}</b>`:''}${dn?`<b class="down" title="EPS 예상 하회">하회 ${dn}</b>`:''}</span></button>`;
+      if(!open) continue;
+      for(const r of g.rows){
       const v=r.verdict||{};
       html+=`<div class="row" tabindex="0" role="button" data-id="${esc(r._id)}" aria-current="${r._id===selected}">
-        <div class="top"><span class="tk">${esc(r.ticker)}</span><span class="nm">${esc(r.name)}</span>${tagsFor(r.ticker)}</div>
+        <div class="top"><span class="tk">${esc(r.ticker)}</span><span class="nm">${esc(r.name)}</span><span class="cap" title="시가총액">${fmtCap(capOf(r.ticker))}</span>${tagsFor(r.ticker)}</div>
         <div class="chips">${v.revenue&&v.revenue!=='확인 불가'?`<span class="chip ${vcls(v.revenue)}">매출 ${esc(v.revenue)}</span>`:''}${v.eps&&v.eps!=='확인 불가'?`<span class="chip ${vcls(v.eps)}">EPS ${esc(v.eps)}</span>`:''}${r.status==='partial'?'<span class="chip warn">보완 중</span>':''}</div>
         <div class="hl">${esc(r.headline)}</div></div>`;
+      }
     }
     el.innerHTML=html;
   }
@@ -356,7 +382,7 @@ details.memo a{color:var(--accent);word-break:break-all}
     let html=`<section class="card">
       <button class="back" id="back">← 목록으로</button>
       <div class="title"><h2>${esc(r.name)}</h2><span class="tk">${esc(r.ticker)}</span>${tagsFor(r.ticker)}<span class="chip acc">${esc(r.period)}</span></div>
-      <div class="meta"><span>${esc(r.reportDate)} ${esc(timing(r.timing))} 발표(미국 동부시간)</span><span>${esc(r.sector||'')}${r.industry?' · '+esc(r.industry):''}</span><span>정리 ${esc(fmtKST(r.updatedAt||r.generatedAt))}</span></div>
+      <div class="meta"><span>${esc(r.reportDate)} ${esc(timing(r.timing))} 발표(미국 동부시간)</span><span>${esc(r.sector||'')}${r.industry?' · '+esc(r.industry):''}</span>${capOf(r.ticker)?`<span>시가총액 ${fmtCap(capOf(r.ticker))}</span>`:''}<span>정리 ${esc(fmtKST(r.updatedAt||r.generatedAt))}</span></div>
       ${r.status==='partial'?'<div class="notice">어닝콜 내용이 아직 공개되지 않아 일부 항목이 비어 있음. 다음 자동 실행(최대 5일)에서 채워짐.</div>':''}
       <p class="headline">${esc(r.headline)}</p>
       <div class="tiles">
@@ -382,8 +408,11 @@ details.memo a{color:var(--accent);word-break:break-all}
     const b=$('#back');if(b)b.onclick=()=>document.body.classList.remove('show-detail');
   }
 
-  function select(id){selected=id;try{localStorage.setItem('et-sel',id);}catch(e){}document.body.classList.add('show-detail');renderList();renderDetail();if(window.innerWidth<=820)window.scrollTo({top:0});}
-  $('#list').addEventListener('click',e=>{const r=e.target.closest('.row');if(r)select(r.dataset.id);});
+  function select(id){selected=id;const rr=reports.find(x=>x._id===id);if(rr&&openDays&&!openDays.has(rr.reportDate)){openDays.add(rr.reportDate);saveOpen();}try{localStorage.setItem('et-sel',id);}catch(e){}document.body.classList.add('show-detail');renderList();renderDetail();if(window.innerWidth<=820)window.scrollTo({top:0});}
+  $('#list').addEventListener('click',e=>{
+    const a=e.target.closest('[data-all]');if(a){const days=[...document.querySelectorAll('#list .daygrp')].map(x=>x.dataset.day);openDays=new Set(a.dataset.all==='1'?days:[]);saveOpen();renderList();return;}
+    const h=e.target.closest('.daygrp');if(h){const d=h.dataset.day;if(openDays.has(d))openDays.delete(d);else openDays.add(d);saveOpen();renderList();return;}
+    const r=e.target.closest('.row');if(r)select(r.dataset.id);});
   $('#list').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const r=e.target.closest('.row');if(r){e.preventDefault();select(r.dataset.id);}}});
   ['#q','#f-sector','#f-verdict','#f-list'].forEach(s=>$(s).addEventListener('input',renderList));
   function setTab(w){const rep=w==='reports';$('#tab-reports').setAttribute('aria-selected',rep);$('#tab-cal').setAttribute('aria-selected',!rep);$('#view-reports').hidden=!rep;$('#view-cal').hidden=rep;$('#view-cal').style.display=rep?'':'flex';}
@@ -421,7 +450,7 @@ details.memo a{color:var(--accent);word-break:break-all}
     let monthTotal=0;
     for(let day=1;day<=last;day++){
       const dt=new Date(Y,Mo-1,day),g=dt.getDay();if(!wk&&(g===0||g===6))continue;
-      const ds=`${Y}-${pad(Mo)}-${pad(day)}`,evs=(by[ds]||[]);monthTotal+=evs.length;
+      const ds=`${Y}-${pad(Mo)}-${pad(day)}`,evs=(by[ds]||[]).slice().sort(byCap);monthTotal+=evs.length;
       const lim=evs.length>9?8:9;
       const chips=evs.slice(0,lim).map(c=>{const has=c.lastReportId&&rep.has(c.lastReportId);const cls=has?'done':ds<t0?'wait':!c.confirmed?'est':'';return `<span class="${cls}" title="${esc(c.name)} · ${esc(timing(c.timing))}">${esc(c.ticker)}</span>`;}).join('')+(evs.length>lim?`<span class="more">+${evs.length-lim}</span>`:'');
       cells.push(`<button class="mcell${ds===t0?' today':''}${ds===calSel?' sel':''}" data-day="${ds}" aria-label="${Mo}월 ${day}일 발표 ${evs.length}건"><span class="dn">${day}${evs.length?`<small>${evs.length}건</small>`:''}</span><div class="mt">${chips}</div>${evs.length?`<span class="mcount">${evs.length}</span>`:''}</button>`);
@@ -440,7 +469,7 @@ details.memo a{color:var(--accent);word-break:break-all}
     let rows=calendar.filter(c=>c.nextDate&&(!q||c.ticker.toLowerCase().includes(q)||(c.name||'').toLowerCase().includes(q))&&(!sec||c.sector===sec)&&listOk(c.ticker,cl));
     if(calWhen==='past') rows=rows.filter(c=>c.nextDate<t0||c.state==='요약 완료');
     if(calWhen==='next') rows=rows.filter(c=>c.nextDate>=t0&&c.state!=='요약 완료');
-    rows.sort((a,b)=>calWhen==='past'?(b.nextDate.localeCompare(a.nextDate)||((TO[a.timing]??2)-(TO[b.timing]??2))):(a.nextDate.localeCompare(b.nextDate)||((TO[a.timing]??2)-(TO[b.timing]??2))||a.ticker.localeCompare(b.ticker)));
+    rows.sort((a,b)=>(calWhen==='past'?b.nextDate.localeCompare(a.nextDate):a.nextDate.localeCompare(b.nextDate))||((TO[a.timing]??2)-(TO[b.timing]??2))||byCap(a,b));
     const total=calendar.length,done=calendar.filter(c=>c.state==='요약 완료').length,up=calendar.filter(c=>c.nextDate>=t0&&c.state!=='요약 완료').length;
     $('#calnote').textContent=`이번 시즌(10/1~12/31, 미국 동부시간) 발표 ${total}건 · 정리 완료 ${done}건 · 다가오는 발표 ${up}건. '추정'은 회사가 날짜를 확정하기 전 예상일임.`;
     document.querySelectorAll('#vmode button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.mode===calMode));
@@ -472,8 +501,8 @@ details.memo a{color:var(--accent);word-break:break-all}
       const res=await fetch('data.json?v='+Date.now(),{cache:'no-store'});if(!res.ok)throw new Error(res.status);
       const data=await res.json();meta=data.meta||null;
       reports=(data.reports||[]).map(r=>Object.assign({_id:r.id||(r.ticker+'_'+String(r.period||'').replace(/\s/g,''))},r));
-      calendar=data.calendar||[];lists=data.lists||{};
-      if(!reports.some(r=>r._id===selected)&&window.innerWidth>820&&reports.length){selected=[...reports].sort((a,b)=>(b.reportDate||'').localeCompare(a.reportDate||''))[0]._id;}
+      calendar=data.calendar||[];lists=data.lists||{};caps=data.marketCaps||{};
+      if(!reports.some(r=>r._id===selected)&&window.innerWidth>820&&reports.length){selected=[...reports].sort((a,b)=>(b.reportDate||'').localeCompare(a.reportDate||'')||byCap(a,b))[0]._id;}
       renderSectors();renderCalSectors();renderList();renderDetail();renderCal();renderStats();
     }catch(e){$('#list').innerHTML='<div class="empty"><strong>데이터를 불러오지 못함</strong><span>잠시 후 새로고침해 주세요.</span></div>';}
   })();
