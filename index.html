@@ -8,8 +8,7 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1a1d21" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#13213a">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -450,7 +449,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
 :root{
   --bg:#f5f4f0; --surface:#ffffff; --sunken:#f9f8f5; --line:#e6e3dc; --line-strong:#cfcac0;
   --fg:#16181d; --muted:#5d6169; --faint:#989ba1;
-  --ink:#16181d; --ink-2:#30343c; --on-ink-fg:#ffffff;
+  --ink:#13213a; --ink-2:#1d2e4d; --on-ink-fg:#ffffff;
   --accent:#28477c; --accent-soft:#eef1f6;
   --up:#1d7149; --up-soft:#eaf2ed; --down:#ad3a2f; --down-soft:#f8ecea; --flat:#5d6169; --flat-soft:#efede8;
   --t-ap:#3c5c8e; --t-br:#94681f; --t-mp:#6b5590; --c-firm:#2f6a5e; --gold:#a97a12;
@@ -472,16 +471,20 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
   --up:#62bf8f; --up-soft:#1a2b23; --down:#e5826f; --down-soft:#33221f; --flat:#a8aaae; --flat-soft:#26292e;
   --t-ap:#9bb3dc; --t-br:#d9ab62; --t-mp:#b8a2dc; --c-firm:#73bfae; --gold:#d6ad4a;
   --warn:#e2b45c; --warn-soft:#352c19;}
-.mast{background:var(--surface);color:var(--fg);border-bottom:1px solid var(--line-strong)}
+/* 남색 마스트헤드 유지(로고 없음) */
+:root{--navy:#13213a;--navy-dim:#9fadc6}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--navy:#0d1626}}
+:root[data-theme="dark"]{--navy:#0d1626}
+.mast{background:var(--navy);color:#e9edf5;border-bottom:0}
 .mast .brand{grid-column:1/-1}
-.mast h1{color:var(--fg);font-family:var(--f-read);font-size:25px;font-weight:700;letter-spacing:-.035em}
-.mast .sub{color:var(--muted)}
+.mast h1{color:#fff;font-family:var(--f-read);font-size:25px;font-weight:700;letter-spacing:-.035em}
+.mast .sub{color:var(--navy-dim)}
 .mast nav.tabs.main{margin-top:10px}
-.mast nav.tabs.main [role=tab]{color:var(--muted)}
-.mast nav.tabs.main [role=tab]:hover{color:var(--fg)}
-.mast nav.tabs.main [role=tab][aria-selected="true"]{color:var(--fg);border-bottom-color:var(--ink)}
-.mast nav.tabs.main [role=tab]:focus-visible{outline-color:var(--accent)}
-.tbadge{background:var(--ink);color:var(--on-ink-fg)}
+.mast nav.tabs.main [role=tab]{color:var(--navy-dim)}
+.mast nav.tabs.main [role=tab]:hover{color:#fff}
+.mast nav.tabs.main [role=tab][aria-selected="true"]{color:#fff;border-bottom-color:#fff}
+.mast nav.tabs.main [role=tab]:focus-visible{outline-color:#fff}
+.tbadge{background:#fff;color:var(--navy)}
 .seg button[aria-pressed="true"],.mcell.sel,.wbtn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--on-ink-fg)}
 .wbtn[aria-pressed="true"] b{color:var(--on-ink-fg)}
 .replink button,:root .replink button{background:var(--ink);border-color:var(--ink);color:var(--on-ink-fg)}
