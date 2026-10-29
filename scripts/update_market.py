@@ -38,6 +38,7 @@ ITEMS = [
     ('US30Y', 'rate',   '미국 30년물',          '30 Yr', 'yield', '%'),
     ('WTI',   'commod', 'WTI 원유',            'CL=F',  'price', '$'),
     ('BRENT', 'commod', '브렌트 원유',          'BZ=F',  'price', '$'),
+    ('VIX',   'risk',   'VIX 변동성지수',       '^VIX',  'price', 'pt'),
 ]
 
 

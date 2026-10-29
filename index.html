@@ -403,6 +403,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
 .mksec>h3 small{font-size:12.5px;font-weight:500;color:var(--muted)}
 .mkgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .mkgrid.r6{grid-template-columns:repeat(6,minmax(0,1fr))}
+.mkgrid.r7{grid-template-columns:repeat(7,minmax(0,1fr))}
 .mkc{appearance:none;font:inherit;color:inherit;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 10px;display:flex;flex-direction:column;gap:2px;min-width:0;cursor:pointer}
 .mkc:hover{border-color:var(--line-strong)}
 .mkc[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
@@ -442,8 +443,8 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
 .mktbl .bar i{position:absolute;top:2px;height:10px;border-radius:1px}
 .mktbl .bar i.pos{background:var(--up)} .mktbl .bar i.neg{background:var(--down)}
 .mkfoot{margin:0;color:var(--faint);font-size:12px;line-height:1.7}
-@media (max-width:1100px){.mkgrid,.mkgrid.r6{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:620px){.mkgrid,.mkgrid.r6{grid-template-columns:repeat(2,minmax(0,1fr))}.mkchart .ch .seg{margin-left:0}.mkhead h2{font-size:18px}.mkmemo h3{font-size:18px}.mkmemo p{font-size:15.5px}}
+@media (max-width:1100px){.mkgrid,.mkgrid.r6,.mkgrid.r7{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:620px){.mkgrid,.mkgrid.r6,.mkgrid.r7{grid-template-columns:repeat(2,minmax(0,1fr))}.mkchart .ch .seg{margin-left:0}.mkhead h2{font-size:18px}.mkmemo h3{font-size:18px}.mkmemo p{font-size:15.5px}}
 
 /* v4: 절제된 팔레트 — 종이색 배경, 먹색 강조 1개, 채도 낮춘 상승·하락색, 밝은 마스트헤드 */
 :root{
@@ -477,7 +478,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
 :root[data-theme="dark"]{--navy:#0d1626}
 .mast{background:var(--navy);color:#e9edf5;border-bottom:0}
 .mast .brand{grid-column:1/-1}
-.mast h1{color:#fff;font-family:var(--f-read);font-size:25px;font-weight:700;letter-spacing:-.035em}
+.mast h1{color:#fff;font-family:var(--f-body);font-size:24px;font-weight:700;letter-spacing:-.03em}
 .mast .sub{color:var(--navy-dim)}
 .mast nav.tabs.main{margin-top:10px}
 .mast nav.tabs.main [role=tab]{color:var(--navy-dim)}
@@ -938,7 +939,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
   const mdl=d=>d?`${+d.slice(5,7)}/${+d.slice(8)}`:'';
   const mdw=d=>`${+d.slice(5,7)}월 ${+d.slice(8)}일(${DOWK[new Date(d+'T12:00:00').getDay()]})`;
   const nf=(v,dg=2)=>v.toLocaleString('en-US',{minimumFractionDigits:dg,maximumFractionDigits:dg});
-  const fmtV=(it,v)=>v==null?'—':it.kind==='yield'?v.toFixed(2)+'%':it.kind==='spread'?(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(0)+'bp':(it.unit==='$'?'$':'')+nf(v);
+  const fmtV=(it,v)=>v==null?'—':it.id==='VIX'?v.toFixed(2):it.kind==='yield'?v.toFixed(2)+'%':it.kind==='spread'?(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(0)+'bp':(it.unit==='$'?'$':'')+nf(v);
   const fmtC=(it,c)=>{if(c==null)return '—';const sg=c>0?'+':c<0?'−':'±';if(it.kind!=='price')return sg+(Math.abs(c)%1?Math.abs(c).toFixed(1):Math.abs(c).toFixed(0))+'bp';return sg+Math.abs(c).toFixed(2)+'%';};
   const cc=c=>c==null||c===0?'':c>0?'pos':'neg';
   const MI=id=>mkt&&mkt.items.find(i=>i.id===id);
@@ -962,6 +963,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
     const sox=c('SOX'),nd=c('NDX');if(sox!=null&&nd!=null)L.push(`필라델피아 반도체 ${f('SOX')}, 나스닥 100 대비 ${(sox-nd>=0?'+':'−')+Math.abs(sox-nd).toFixed(2)}%p.`);
     const r=['US2Y','US10Y','US30Y'].map(g).filter(Boolean);if(r.length){const sp=spreadItem();const dts=new Set(r.map(x=>x.date));L.push(`국채 ${r.map(x=>`${x.name.replace('미국 ','')} ${x.last.toFixed(2)}%(<b class="${cc(c(x.id))}">${fmtC(x,c(x.id))}</b>)`).join(', ')}${sp?`, 10년−2년 금리차 ${fmtV(sp,sp.last)}`:''}${[...dts].some(d=>d<spx.date)?` (${mdl([...dts].sort()[0])} 기준)`:''}.`);}
     const o=['WTI','BRENT'].map(g).filter(Boolean);if(o.length)L.push(o.map(x=>`${x.name.replace(' 원유','')} ${fmtV(x,x.last)} (<b class="${cc(c(x.id))}">${fmtC(x,c(x.id))}</b>)`).join(', ')+'. 근월물 선물 기준.');
+    const vx=g('VIX');if(vx){const p=vx.series&&vx.series.length>1?vx.series[vx.series.length-2][1]:null;L.push(`VIX ${vx.last.toFixed(2)} (${p!=null?((vx.last-p>=0?'+':'−')+Math.abs(vx.last-p).toFixed(2)+'pt, '):''}<b class="${cc(c('VIX'))}">${fmtC(vx,c('VIX'))}</b>).`);}
     L.push(`연초 이후: S&P 500 ${f('SPX','YTD')}, 나스닥 100 ${f('NDX','YTD')}, 러셀 2000 ${f('RUT','YTD')}, 반도체 ${f('SOX','YTD')}.`);
     return L;}
   function drawChart(){const box=$('#mkcbox');if(!box||!mkt)return;const it=mkSel==='SPRD'?spreadItem():MI(mkSel);if(!it){box.innerHTML='';return;}
@@ -992,7 +994,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
     const asOf=mkt.asOf;if(!mkSel||!(mkSel==='SPRD'||MI(mkSel)))mkSel='SPX';if(!PERS.includes(secPer))secPer='1D';
     const day=news.find(d=>d.date===asOf&&d.marketMemo)||null,mm=day&&day.marketMemo;
     const lines=autoLines();
-    const idx=mkt.items.filter(i=>i.group==='index');const rate=mkt.items.filter(i=>i.group==='rate'),com=mkt.items.filter(i=>i.group==='commod');const sp=spreadItem();
+    const idx=mkt.items.filter(i=>i.group==='index');const rate=mkt.items.filter(i=>i.group==='rate'),com=mkt.items.filter(i=>i.group==='commod'),risk=mkt.items.filter(i=>i.group==='risk');const sp=spreadItem();
     const secs=mkt.items.filter(i=>i.group==='sector');const spy=secs.find(i=>i.id==='SPY');const others=secs.filter(i=>i.id!=='SPY').sort((a,b)=>(chgOf(b,secPer)??-1e9)-(chgOf(a,secPer)??-1e9));
     const mxAbs=Math.max(0.01,...secs.map(i=>Math.abs(chgOf(i,secPer)||0)));const spyC=spy?chgOf(spy,secPer):null;
     const heat=c=>{if(c==null||!c)return '';return ` style="background:color-mix(in srgb,var(${c>0?'--up':'--down'}) ${Math.min(16,Math.round(Math.abs(c)/mxAbs*16))}%,transparent)"`;};
@@ -1010,11 +1012,11 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
         <div class="toolbar"><div class="seg" role="group" aria-label="섹터 기간" id="secseg">${PERS.map(p=>`<button data-secper="${p}" aria-pressed="${p===secPer}">${p}</button>`).join('')}</div></div>
         <div class="card" style="padding:0"><div class="tbl mktbl"><table><thead><tr><th>ETF</th><th>섹터</th><th class="n">종가</th>${PERS.map(p=>`<th class="n" data-secper="${p}"${p===secPer?' aria-sort="descending"':''}>${p}</th>`).join('')}<th class="n">SPY 대비</th><th>${secPer} 수익률</th></tr></thead><tbody>${spy?trow(spy,true):''}${others.map(i=>trow(i,false)).join('')}</tbody></table></div></div></div>
       ${slot==='sector'?chartCard:''}
-      <div class="mksec"><h3>금리 · 원유 <small>금리 변화는 bp(0.01%p) · 원유는 근월물 선물 · 누르면 바로 아래에 차트</small></h3><div class="mkgrid r6">${[...rate,...(sp?[sp]:[]),...com].map(i=>card(i,asOf)).join('')}</div></div>
+      <div class="mksec"><h3>금리 · 원유 · 변동성 <small>금리 변화는 bp(0.01%p) · 원유는 근월물 선물 · VIX는 S&P 500 옵션으로 본 향후 30일 예상 변동성(연율, %) · 누르면 바로 아래에 차트</small></h3><div class="mkgrid ${risk.length?'r7':'r6'}">${[...rate,...(sp?[sp]:[]),...com,...risk].map(i=>card(i,asOf)).join('')}</div></div>
       ${slot==='rate'?chartCard:''}
       <p class="mkfoot">${esc(mkt.method||'')}<br>출처: 지수·ETF·원유 Yahoo Finance 일봉 종가, 국채 금리 미 재무부 Daily Treasury Par Yield Curve.${notes.length?'<br>'+notes.map(esc).join(' · '):''}</p>`;
     updChartHead();drawChart();}
-  function slotOf(id){if(id==='SPRD')return 'rate';const it=MI(id);if(!it)return 'index';return it.group==='sector'?'sector':(it.group==='rate'||it.group==='commod')?'rate':'index';}
+  function slotOf(id){if(id==='SPRD')return 'rate';const it=MI(id);if(!it)return 'index';return it.group==='sector'?'sector':(it.group==='rate'||it.group==='commod'||it.group==='risk')?'rate':'index';}
   function keepPos(el,fn){const sel=el&&el.dataset.mk;const y0=el?el.getBoundingClientRect().top:0;fn();const n=sel&&document.querySelector(`#mk [data-mk="${sel}"]`);if(n){const dy=n.getBoundingClientRect().top-y0;if(Math.abs(dy)>1)scrollTo({top:scrollY+dy});}}
   function updChartHead(){const it=mkSel==='SPRD'?spreadItem():MI(mkSel);if(!it)return;const p=mkPer==='1D'?'1M':mkPer;const c=chgOf(it,p);$('#mkct').textContent=it.name;const e=$('#mkcc');e.className='chg '+cc(c);e.textContent=`${fmtV(it,it.last)} · ${p} ${fmtC(it,c)}`;$('#mkcs').textContent=`${it.sym} · ${it.src||''}`;
     document.querySelectorAll('#mk [data-mk]').forEach(x=>{x.tagName==='TR'?x.classList.toggle('on',x.dataset.mk===mkSel):x.setAttribute('aria-pressed',x.dataset.mk===mkSel);});}
