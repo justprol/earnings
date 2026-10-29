@@ -212,7 +212,7 @@ def changes(pts, kind):
         '1D': pts[-2][0] if len(pts) > 1 else None,
         '1W': (ld - timedelta(days=7)).isoformat(),
         '1M': minus_months(ld, 1).isoformat(),
-        '3M': minus_months(ld, 3).isoformat(),
+        '6M': minus_months(ld, 6).isoformat(),
         'YTD': date(ld.year - 1, 12, 31).isoformat(),
         '1Y': minus_months(ld, 12).isoformat(),
     }
@@ -266,7 +266,7 @@ def main():
     spx = next((i for i in items if i['id'] == 'SPX'), None)
     data = {'asOf': spx['date'] if spx else max((i['date'] for i in items), default=None),
             'items': items, 'notes': notes,
-            'method': '기간 수익률 = 마지막 종가 ÷ 기준일 종가 − 1. 기준일은 1W·1M·3M·1Y는 해당 날짜 이전 마지막 거래일, YTD는 전년 마지막 거래일. 금리는 %p 변화를 bp(0.01%p)로 표시.'}
+            'method': '기간 수익률 = 마지막 종가 ÷ 기준일 종가 − 1. 기준일은 1W·1M·6M·1Y는 해당 날짜 이전 마지막 거래일, YTD는 전년 마지막 거래일. 금리는 %p 변화를 bp(0.01%p)로 표시.'}
     prev = None
     if os.path.exists(OUT):
         try:

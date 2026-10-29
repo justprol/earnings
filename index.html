@@ -880,7 +880,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
   /* ===== 시장 ===== */
   let mkt=null,mkSel=null,mkPer='3M',secPer='1D';
   try{mkSel=localStorage.getItem('et-mksel');mkPer=localStorage.getItem('et-mkper')||'3M';secPer=localStorage.getItem('et-secper')||'1D';}catch(e){}
-  const PERS=['1D','1W','1M','3M','YTD','1Y'];
+  const PERS=['1D','1W','1M','6M','YTD','1Y'];
   const mdl=d=>d?`${+d.slice(5,7)}/${+d.slice(8)}`:'';
   const mdw=d=>`${+d.slice(5,7)}월 ${+d.slice(8)}일(${DOWK[new Date(d+'T12:00:00').getDay()]})`;
   const nf=(v,dg=2)=>v.toLocaleString('en-US',{minimumFractionDigits:dg,maximumFractionDigits:dg});
@@ -889,7 +889,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
   const cc=c=>c==null||c===0?'':c>0?'pos':'neg';
   const MI=id=>mkt&&mkt.items.find(i=>i.id===id);
   function minusMonths(d,m){const [y,mo,dd]=d.split('-').map(Number);let Y=y,M=mo-m;while(M<=0){M+=12;Y--;}const last=new Date(Y,M,0).getDate();return `${Y}-${pad(M)}-${pad(Math.min(dd,last))}`;}
-  function cutoff(ld,per){if(per==='1W'){const t=new Date(ld+'T12:00:00');t.setDate(t.getDate()-7);return t.toISOString().slice(0,10);}if(per==='1M')return minusMonths(ld,1);if(per==='3M')return minusMonths(ld,3);if(per==='1Y')return minusMonths(ld,12);if(per==='YTD')return `${+ld.slice(0,4)-1}-12-31`;return null;}
+  function cutoff(ld,per){if(per==='1W'){const t=new Date(ld+'T12:00:00');t.setDate(t.getDate()-7);return t.toISOString().slice(0,10);}if(per==='1M')return minusMonths(ld,1);if(per==='3M')return minusMonths(ld,3);if(per==='6M')return minusMonths(ld,6);if(per==='1Y')return minusMonths(ld,12);if(per==='YTD')return `${+ld.slice(0,4)-1}-12-31`;return null;}
   function slicePer(it,per){const s=it.series||[];if(!s.length)return [];const ld=s[s.length-1][0];if(per==='1D')return s.slice(-2);const c=cutoff(ld,per);let k=-1;for(let i=0;i<s.length;i++){if(s[i][0]<=c)k=i;else break;}return s.slice(Math.max(0,k));}
   function chgOf(it,per){if(it.chg&&per in it.chg)return it.chg[per];const s=slicePer(it,per);if(s.length<2)return null;const a=s[0][1],b=s[s.length-1][1];return it.kind==='price'?Math.round((b/a-1)*1e4)/100:Math.round((b-a)*(it.kind==='spread'?1:100)*10)/10;}
   function spreadItem(){const a=MI('US10Y'),b=MI('US2Y');if(!a||!b)return null;const m=new Map(b.series.map(([d,v])=>[d,v]));const ser=a.series.filter(([d])=>m.has(d)).map(([d,v])=>[d,Math.round((v-m.get(d))*1000)/10]);if(ser.length<2)return null;
@@ -935,7 +935,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
     hit.addEventListener('mousemove',mv);hit.addEventListener('touchmove',mv,{passive:true});hit.addEventListener('mouseleave',()=>{hov.style.display='none';tip.hidden=true;});}
   function renderMarket(){const el=$('#mk');if(!el)return;
     if(!mkt||!(mkt.items||[]).length){el.innerHTML='<div class="card"><div class="empty"><strong>아직 시장 데이터가 없음</strong><span>미국 장 마감 후 화~토 06:20(한국시간)에 자동으로 채워짐.</span></div></div>';return;}
-    const asOf=mkt.asOf;if(!mkSel||!(mkSel==='SPRD'||MI(mkSel)))mkSel='SPX';
+    const asOf=mkt.asOf;if(!mkSel||!(mkSel==='SPRD'||MI(mkSel)))mkSel='SPX';if(!PERS.includes(secPer))secPer='1D';
     const day=news.find(d=>d.date===asOf&&d.marketMemo)||null,mm=day&&day.marketMemo;
     const lines=autoLines();
     const idx=mkt.items.filter(i=>i.group==='index');const rate=mkt.items.filter(i=>i.group==='rate'),com=mkt.items.filter(i=>i.group==='commod');const sp=spreadItem();
@@ -950,7 +950,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
     el.innerHTML=`<div class="mkhead"><div><h2>미국 시장 · ${mdw(asOf)} 마감</h2><p>갱신 ${esc(fmtKST(mkt.generatedAt))} · 가격은 종가 기준(배당 미포함) · 금리는 미 재무부 고시</p></div><button class="abtn" data-copy="#market">링크 복사</button></div>
       <section class="card mkmemo"><div class="lab">장 마감 메모</div>${mm?`${mm.title?`<h3>${esc(mm.title)}</h3>`:''}${(mm.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}`:'<p class="hint">해설 메모는 매일 아침 뉴스 정리(06:43) 때 함께 작성됨. 아래는 수치로 본 요약.</p>'}<ul class="mkauto">${lines.map(x=>`<li>${x}</li>`).join('')}</ul></section>
       <div class="mksec"><h3>주요 지수 · 반도체 <small>카드를 누르면 아래 차트에 표시 · 작은 그래프 기간: ${mkPer}</small></h3><div class="mkgrid r6">${idx.map(i=>card(i,asOf)).join('')}</div></div>
-      <section class="card mkchart"><div class="ch"><h3 id="mkct"></h3><span class="chg" id="mkcc"></span><div class="seg" role="group" aria-label="차트 기간" id="mkpseg">${['1M','3M','YTD','1Y'].map(p=>`<button data-mkper="${p}" aria-pressed="${p===mkPer}">${p}</button>`).join('')}</div></div><div class="cbox" id="mkcbox"></div><span class="src" id="mkcs"></span></section>
+      <section class="card mkchart"><div class="ch"><h3 id="mkct"></h3><span class="chg" id="mkcc"></span><div class="seg" role="group" aria-label="차트 기간" id="mkpseg">${['1M','3M','6M','YTD','1Y'].map(p=>`<button data-mkper="${p}" aria-pressed="${p===mkPer}">${p}</button>`).join('')}</div></div><div class="cbox" id="mkcbox"></div><span class="src" id="mkcs"></span></section>
       <div class="mksec"><h3>섹터 ETF <small>기간을 누르면 그 기간 수익률 순으로 정렬 · 막대는 선택 기간 · SPY 대비는 %p</small></h3>
         <div class="toolbar"><div class="seg" role="group" aria-label="섹터 기간" id="secseg">${PERS.map(p=>`<button data-secper="${p}" aria-pressed="${p===secPer}">${p}</button>`).join('')}</div></div>
         <div class="card" style="padding:0"><div class="tbl mktbl"><table><thead><tr><th>ETF</th><th>섹터</th><th class="n">종가</th>${PERS.map(p=>`<th class="n" data-secper="${p}"${p===secPer?' aria-sort="descending"':''}>${p}</th>`).join('')}<th class="n">SPY 대비</th><th>${secPer} 수익률</th></tr></thead><tbody>${spy?trow(spy,true):''}${others.map(i=>trow(i,false)).join('')}</tbody></table></div></div></div>
