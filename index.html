@@ -201,6 +201,24 @@ details.memo a{color:var(--accent);word-break:break-all}
 .tk-cloud span{display:inline-flex;align-items:center;gap:5px;font-family:var(--f-num);font-size:12.5px;background:var(--sunken);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
 @media (max-width:640px){.calday{grid-template-columns:minmax(0,1fr)}.calday .d{flex-direction:row;gap:8px;align-items:baseline;border-right:0;border-bottom:1px solid var(--line)}.ev{grid-template-columns:56px minmax(0,1fr) auto}.ev .tm{display:none}}
 
+/* 시장 뉴스 */
+.nday{display:flex;flex-wrap:wrap;gap:6px}
+.nday button{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);font-family:var(--f-num);font-size:13px;font-weight:600;padding:5px 11px;border-radius:999px}
+.nday button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.nwrap{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 22px 18px}
+.ncat{margin:22px 0 4px;font-size:18px;font-weight:700;padding-bottom:8px;border-bottom:2px solid var(--fg)}
+.ncat:first-child{margin-top:12px}
+.nitem{padding:16px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:3px;max-width:86ch}
+.nitem:last-child{border-bottom:0}
+.nitem h3{margin:0;font-size:16.5px;font-weight:700;line-height:1.45}
+.nitem .nm{font-size:13px;color:var(--muted)}
+.nitem .nm b{font-weight:600;color:var(--fg)}
+.nitem a.orig{font-size:13.5px;color:var(--accent);text-decoration:underline;text-underline-offset:2px;word-break:break-word}
+.nitem p{margin:6px 0 0;font-size:14.5px;line-height:1.75}
+.nitem .tkr{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.nitem .tkr span{font-family:var(--f-num);font-size:11.5px;font-weight:600;padding:0 6px;border-radius:4px;background:var(--sunken);border:1px solid var(--line);color:var(--muted)}
+.nmeta{margin:0;color:var(--muted);font-size:13px}
+@media (max-width:640px){.nwrap{padding:4px 14px 14px}}
 .foot{color:var(--faint);font-size:12px}
 @media (max-width:900px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:820px){
@@ -221,7 +239,7 @@ details.memo a{color:var(--accent);word-break:break-all}
   <header class="top">
     <div>
       <h1>실적 트래커</h1>
-      <p class="sub">글로벌자산운용실 Database 탭 미국 상장 종목 · 매일 07:30 / 24:00(한국시간) 자동 갱신</p>
+      <p class="sub">글로벌자산운용실 Database 탭 미국 상장 종목 · 매일 07:30 / 24:00(한국시간) 자동 갱신 · 시장 뉴스 화~토 06:43</p>
     </div>
     <div class="stats" aria-label="트래커 상태">
       <div class="stat"><b id="st-univ">–</b><span>추적 종목</span></div>
@@ -234,6 +252,7 @@ details.memo a{color:var(--accent);word-break:break-all}
   <nav class="tabs" role="tablist">
     <button id="tab-reports" role="tab" aria-selected="true" aria-controls="view-reports">실적 요약</button>
     <button id="tab-cal" role="tab" aria-selected="false" aria-controls="view-cal">발표 일정</button>
+    <button id="tab-news" role="tab" aria-selected="false" aria-controls="view-news">시장 뉴스</button>
     <button class="glossbtn" id="glossbtn" aria-expanded="false" aria-controls="gloss">용어 설명</button>
   </nav>
 
@@ -284,6 +303,16 @@ details.memo a{color:var(--accent);word-break:break-all}
     <p class="calnote" id="calnote"></p>
     <div class="cal" id="calwrap"><div class="empty"><strong>발표 일정을 불러오는 중</strong></div></div>
     <details class="memo" id="undated" hidden><summary></summary><p class="calnote" style="margin:0 0 8px">아래 종목은 아직 발표일을 확인하지 못함. 자동 실행이 회사 IR 공지를 확인하는 대로 일정표에 추가됨.</p><div class="tk-cloud" id="undated-list"></div></details>
+  </div>
+
+  <div id="view-news" role="tabpanel" aria-labelledby="tab-news" hidden style="flex-direction:column;gap:12px">
+    <div class="toolbar">
+      <input id="nq" type="search" placeholder="제목·매체·티커 검색" aria-label="뉴스 검색">
+      <select id="n-cat" aria-label="분류"><option value="">전체 분류</option></select>
+    </div>
+    <div class="nday" id="nday" role="group" aria-label="날짜"></div>
+    <p class="nmeta" id="nmeta"></p>
+    <div class="nwrap" id="nlist"><div class="empty"><strong>뉴스를 불러오는 중</strong></div></div>
   </div>
 
   <p class="foot">수치는 회사 발표 자료와 공개 기사 기준입니다. 원문에서 확인하지 못한 값은 '—'로 표시하고, 사유는 각 종목 하단 '데이터 메모'에 적었습니다.</p>
@@ -419,9 +448,34 @@ details.memo a{color:var(--accent);word-break:break-all}
     const r=e.target.closest('.row');if(r)select(r.dataset.id);});
   $('#list').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const r=e.target.closest('.row');if(r){e.preventDefault();select(r.dataset.id);}}});
   ['#q','#f-sector','#f-verdict','#f-list'].forEach(s=>$(s).addEventListener('input',renderList));
-  function setTab(w){const rep=w==='reports';$('#tab-reports').setAttribute('aria-selected',rep);$('#tab-cal').setAttribute('aria-selected',!rep);$('#view-reports').hidden=!rep;$('#view-cal').hidden=rep;$('#view-cal').style.display=rep?'':'flex';}
-  $('#tab-reports').onclick=()=>setTab('reports');$('#tab-cal').onclick=()=>setTab('cal');
+  function setTab(w){[['reports','#tab-reports','#view-reports'],['cal','#tab-cal','#view-cal'],['news','#tab-news','#view-news']].forEach(([k,t,v])=>{const on=k===w;$(t).setAttribute('aria-selected',on);$(v).hidden=!on;$(v).style.display=on?'flex':'';});try{history.replaceState(null,'',w==='cal'?'#calendar':w==='news'?'#news':location.pathname+location.search);}catch(e){}}
+  $('#tab-reports').onclick=()=>setTab('reports');$('#tab-cal').onclick=()=>setTab('cal');$('#tab-news').onclick=()=>setTab('news');
   if(location.hash==='#calendar')setTab('cal');
+  if(location.hash==='#news')setTab('news');
+
+  /* 시장 뉴스 */
+  let news=[],nDay=null;
+  function renderNews(){
+    const box=$('#nlist');
+    if(!news.length){box.innerHTML='<div class="empty"><strong>아직 정리된 뉴스 없음</strong><span>매일 아침 자동 실행이 전날 뉴스를 추가합니다.</span></div>';$('#nday').innerHTML='';$('#nmeta').textContent='';return;}
+    if(!nDay||!news.some(d=>d.date===nDay))nDay=news[0].date;
+    $('#nday').innerHTML=news.slice(0,14).map(d=>{const dt=new Date(d.date+'T12:00:00');return `<button data-nd="${esc(d.date)}" aria-pressed="${d.date===nDay}">${esc(d.date.slice(5).replace('-','/'))} ${DOWK[dt.getDay()]}</button>`;}).join('');
+    const day=news.find(d=>d.date===nDay);
+    const q=$('#nq').value.trim().toLowerCase(),cf=$('#n-cat').value;
+    const cats=(day.categories||[]);
+    const curC=$('#n-cat').value;$('#n-cat').innerHTML='<option value="">전체 분류</option>'+cats.map(c=>`<option ${c.name===curC?'selected':''}>${esc(c.name)}</option>`).join('');
+    const hit=i=>!q||[i.title,i.source,i.origTitle,i.sector,(i.tickers||[]).join(' '),(i.body||[]).join(' ')].join(' ').toLowerCase().includes(q);
+    let n=0,html='';
+    for(const c of cats){if(cf&&c.name!==cf)continue;const items=(c.items||[]).filter(hit);if(!items.length)continue;
+      html+=`<h2 class="ncat">${esc(c.name)}</h2>`;
+      for(const i of items){n++;
+        html+=`<article class="nitem"><h3>${esc(i.title)}</h3><div class="nm"><b>${esc(i.source)}</b> | ${esc(i.dateLabel||'')} | ${esc(i.sector||'')}</div>${i.url?`<a class="orig" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.origTitle||i.url)}</a>`:`<span class="nm">${esc(i.origTitle||'')}</span>`}${(i.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${(i.tickers||[]).length?`<div class="tkr">${i.tickers.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}</article>`;}}
+    box.innerHTML=html||'<div class="empty"><strong>조건에 맞는 기사 없음</strong><span>검색어나 분류를 바꿔 보세요.</span></div>';
+    $('#nmeta').textContent=`${day.label||day.date} · ${n}건${day.generatedAt?' · 작성 '+fmtKST(day.generatedAt):''}${day.note?' · '+day.note:''}`;
+  }
+  $('#nday').addEventListener('click',e=>{const b=e.target.closest('[data-nd]');if(b){nDay=b.dataset.nd;$('#n-cat').value='';renderNews();}});
+  $('#nq').addEventListener('input',renderNews);$('#n-cat').addEventListener('input',renderNews);
+  (async()=>{try{const r=await fetch('news.json?v='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;const d=await r.json();news=(d.days||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));}catch(e){news=[];}renderNews();})();
   $('#glossbtn').onclick=()=>{const g=$('#gloss');g.hidden=!g.hidden;$('#glossbtn').setAttribute('aria-expanded',!g.hidden);};
 
   function renderSectors(){const cur=$('#f-sector').value;const secs=[...new Set(reports.map(r=>r.sector).filter(Boolean))].sort();$('#f-sector').innerHTML='<option value="">전체 섹터</option>'+secs.map(s=>`<option ${s===cur?'selected':''}>${esc(s)}</option>`).join('');}
