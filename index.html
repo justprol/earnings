@@ -207,11 +207,10 @@ details.memo a{color:var(--accent);word-break:break-all}
 @media (max-width:640px){.calday{grid-template-columns:minmax(0,1fr)}.calday .d{flex-direction:row;gap:8px;align-items:baseline;border-right:0;border-bottom:1px solid var(--line)}.ev{grid-template-columns:56px minmax(0,1fr) auto}.ev .tm{display:none}}
 
 /* 시장 뉴스 */
-.ncat-h{appearance:none;width:100%;border:0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:7px 14px 7px 22px;font-size:12.5px;font-weight:700;color:var(--accent);background:var(--surface);text-align:left}
-.ncat-h:hover{background:var(--sunken)}
-.ncat-h .car{display:inline-block;width:10px;color:var(--muted);transition:transform .15s}
-.ncat-h[aria-expanded="true"] .car{transform:rotate(90deg)}
-.ncat-h .cnt{margin-left:auto;font-family:var(--f-num);font-size:11.5px;font-weight:600;color:var(--muted)}
+.nb{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:4px;margin-right:6px;vertical-align:1px;white-space:nowrap;color:var(--cc);background:color-mix(in srgb,var(--cc) 14%,transparent)}
+.cc1{--cc:var(--t-ap)} .cc2{--cc:var(--t-br)} .cc3{--cc:var(--accent)} .cc4{--cc:var(--t-mp)} .cc0{--cc:var(--flat)}
+#nlist .row{border-left:3px solid var(--cc,transparent)}
+.nart .nb{align-self:flex-start;font-size:12.5px;padding:3px 9px}
 .row .src{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .src b{font-weight:600;color:var(--fg)}
 .row .nt{font-size:14px;font-weight:600;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -475,11 +474,13 @@ details.memo a{color:var(--accent);word-break:break-all}
   setTab(location.hash==='#calendar'?'cal':location.hash==='#earnings'?'reports':'news');
 
   /* 시장 뉴스 */
-  let news=[],nItems=[],nSel=null,nOpen=null,nCatClosed=new Set();
-  try{nSel=localStorage.getItem('et-nsel');const o=JSON.parse(localStorage.getItem('et-nopen')||'null');if(Array.isArray(o))nOpen=new Set(o);const c=JSON.parse(localStorage.getItem('et-ncat')||'[]');if(Array.isArray(c))nCatClosed=new Set(c);}catch(e){}
-  const nSave=()=>{try{localStorage.setItem('et-nopen',JSON.stringify([...nOpen]));localStorage.setItem('et-ncat',JSON.stringify([...nCatClosed]));}catch(e){}};
+  let news=[],nItems=[],nSel=null,nOpen=null;
+  try{nSel=localStorage.getItem('et-nsel');const o=JSON.parse(localStorage.getItem('et-nopen')||'null');if(Array.isArray(o))nOpen=new Set(o);}catch(e){}
+  const nSave=()=>{try{localStorage.setItem('et-nopen',JSON.stringify([...nOpen]));}catch(e){}};
   function nFiltered(){const q=$('#nq').value.trim().toLowerCase(),cf=$('#n-cat').value;
     return nItems.filter(i=>(!cf||i._cat===cf)&&(!q||[i.title,i.summary,i.source,i.origTitle,i.sector,(i.tickers||[]).join(' '),(i.body||[]).join(' ')].join(' ').toLowerCase().includes(q)));}
+  const CAT_ORDER=['금융시장·거시경제','산업·섹터','기업','심층 분석'],CAT_SHORT={'금융시장·거시경제':'시장·거시','산업·섹터':'산업','기업':'기업','심층 분석':'분석'};
+  const catIdx=c=>{const k=CAT_ORDER.indexOf(c);return k<0?9:k;};
   function renderNews(){
     const el=$('#nlist');
     if(!nItems.length){el.innerHTML='<div class="empty"><strong>아직 정리된 뉴스 없음</strong><span>매일 아침 자동 실행이 전날 뉴스를 추가합니다.</span></div>';renderNewsDetail();return;}
@@ -491,23 +492,19 @@ details.memo a{color:var(--accent);word-break:break-all}
     for(const g of days){const open=filtering||nOpen.has(g.d);const dt=new Date(g.d+'T12:00:00');
       html+=`<button class="daygrp" data-nday="${esc(g.d)}" aria-expanded="${open}"><span class="car">▸</span>${esc(g.d.slice(5).replace('-','/'))} <span class="dw">${DOWK[dt.getDay()]}요일 뉴스</span><span class="cnt"><b>${g.rows.length}건</b></span></button>`;
       if(!open)continue;
-      const cats=[];g.rows.forEach(i=>{const c=cats[cats.length-1];if(c&&c.name===i._cat)c.rows.push(i);else cats.push({name:i._cat,rows:[i]});});
-      for(const c of cats){const key=g.d+'|'+c.name,co=filtering||!nCatClosed.has(key);
-        html+=`<button class="ncat-h" data-ncat="${esc(key)}" aria-expanded="${co}"><span class="car">▸</span>${esc(c.name)}<span class="cnt">${c.rows.length}</span></button>`;
-        if(!co)continue;
-        for(const i of c.rows)html+=`<div class="row" tabindex="0" role="button" data-nid="${esc(i._id)}" aria-current="${i._id===nSel}"><span class="nt">${esc(i.title)}</span><span class="src"><b>${esc(i.source)}</b> · ${esc(i.sector||'')}</span></div>`;}}
+      const sorted=[...g.rows].sort((a,b)=>catIdx(a._cat)-catIdx(b._cat));
+      for(const i of sorted){const c=catIdx(i._cat);html+=`<div class="row cc${c<9?c+1:0}" tabindex="0" role="button" data-nid="${esc(i._id)}" aria-current="${i._id===nSel}"><span class="nt"><span class="nb">${esc(CAT_SHORT[i._cat]||i._cat)}</span>${esc(i.title)}</span><span class="src"><b>${esc(i.source)}</b> · ${esc(i.sector||'')}</span></div>`;}}
     el.innerHTML=html;
   }
   function renderNewsDetail(){
     const el=$('#ndetail');const i=nItems.find(x=>x._id===nSel);
     if(!i){el.innerHTML='<div class="card"><div class="empty"><strong>기사를 선택하세요</strong><span>왼쪽 목록에서 제목을 누르면 내용이 여기에 표시됩니다.</span></div></div>';return;}
-    el.innerHTML=`<button class="back" id="nback">← 목록으로</button><div class="card nart"><span class="chip acc" style="align-self:flex-start">${esc(i._cat)}</span><h2>${esc(i.title)}</h2><div class="nm"><b>${esc(i.source)}</b> | ${esc(i.dateLabel||'')} | ${esc(i.sector||'')}</div>${i.url?`<a class="orig" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.origTitle||i.url)}</a>`:`<span class="nm">${esc(i.origTitle||'')}</span>`}${i.summary?`<div class="nsum"><div class="lab">요약</div><p>${esc(i.summary)}</p></div>`:''}${(i.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${(i.tickers||[]).length?`<div class="tkr">${i.tickers.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}</div>${i._day&&i._day.note?`<p class="foot" style="margin:0">${esc(i._day.label||'')} · ${esc(i._day.note)}</p>`:''}`;
+    el.innerHTML=`<button class="back" id="nback">← 목록으로</button><div class="card nart cc${catIdx(i._cat)<9?catIdx(i._cat)+1:0}"><span class="nb">${esc(i._cat)}</span><h2>${esc(i.title)}</h2><div class="nm"><b>${esc(i.source)}</b> | ${esc(i.dateLabel||'')} | ${esc(i.sector||'')}</div>${i.url?`<a class="orig" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.origTitle||i.url)}</a>`:`<span class="nm">${esc(i.origTitle||'')}</span>`}${i.summary?`<div class="nsum"><div class="lab">요약</div><p>${esc(i.summary)}</p></div>`:''}${(i.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${(i.tickers||[]).length?`<div class="tkr">${i.tickers.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}</div>${i._day&&i._day.note?`<p class="foot" style="margin:0">${esc(i._day.label||'')} · ${esc(i._day.note)}</p>`:''}`;
     const b=$('#nback');if(b)b.onclick=()=>document.body.classList.remove('show-detail');
   }
-  function nSelect(id){nSel=id;const it=nItems.find(x=>x._id===id);if(it){if(nOpen&&!nOpen.has(it._date))nOpen.add(it._date);nCatClosed.delete(it._date+'|'+it._cat);nSave();}try{localStorage.setItem('et-nsel',id);}catch(e){}document.body.classList.add('show-detail');renderNews();renderNewsDetail();if(window.innerWidth<=820)window.scrollTo({top:0});}
+  function nSelect(id){nSel=id;const it=nItems.find(x=>x._id===id);if(it){if(nOpen&&!nOpen.has(it._date))nOpen.add(it._date);nSave();}try{localStorage.setItem('et-nsel',id);}catch(e){}document.body.classList.add('show-detail');renderNews();renderNewsDetail();if(window.innerWidth<=820)window.scrollTo({top:0});}
   $('#nlist').addEventListener('click',e=>{
-    const a=e.target.closest('[data-nall]');if(a){const ds=[...document.querySelectorAll('#nlist .daygrp')].map(x=>x.dataset.nday);nOpen=new Set(a.dataset.nall==='1'?ds:[]);if(a.dataset.nall==='1')nCatClosed.clear();nSave();renderNews();return;}
-    const ch=e.target.closest('[data-ncat]');if(ch){const k=ch.dataset.ncat;if(nCatClosed.has(k))nCatClosed.delete(k);else nCatClosed.add(k);nSave();renderNews();return;}
+    const a=e.target.closest('[data-nall]');if(a){const ds=[...document.querySelectorAll('#nlist .daygrp')].map(x=>x.dataset.nday);nOpen=new Set(a.dataset.nall==='1'?ds:[]);nSave();renderNews();return;}
     const h=e.target.closest('[data-nday]');if(h){const d=h.dataset.nday;if(nOpen.has(d))nOpen.delete(d);else nOpen.add(d);nSave();renderNews();return;}
     const r=e.target.closest('[data-nid]');if(r)nSelect(r.dataset.nid);});
   $('#nlist').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const r=e.target.closest('[data-nid]');if(r){e.preventDefault();nSelect(r.dataset.nid);}}});
