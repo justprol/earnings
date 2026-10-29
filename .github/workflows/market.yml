@@ -1,0 +1,37 @@
+name: market-data
+# 미국 장 마감 후 시장 데이터(market.json) 갱신
+# 21:20 UTC = 06:20 KST (화~토), 22:50 UTC = 07:50 KST: 재무부 금리 늦게 올라오는 날 보완
+on:
+  schedule:
+    - cron: '20 21 * * 1-5'
+    - cron: '50 22 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch market data
+        run: python3 scripts/update_market.py
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add market.json
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
+          AS_OF=$(python3 -c 'import json;print(json.load(open("market.json"))["asOf"])')
+          git commit -m "market: ${AS_OF} 마감 데이터"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep 5
+          done
+          exit 1
