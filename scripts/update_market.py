@@ -21,7 +21,7 @@ ITEMS = [
     ('DJI',   'index',  '다우존스',            '^DJI',  'price', 'pt'),
     ('SPXEW', 'index',  'S&P 500 동일가중',     '^SPXEW', 'price', 'pt'),
     ('SOX',   'index',  '필라델피아 반도체',     '^SOX',  'price', 'pt'),
-    ('SPY',   'sector', 'S&P 500 (SPY, 기준)', 'SPY',   'price', '$'),
+    ('SPY',   'sector', 'S&P 500 (기준)', 'SPY',   'price', '$'),
     ('XLK',   'sector', '정보기술',            'XLK',   'price', '$'),
     ('XLC',   'sector', '커뮤니케이션',         'XLC',   'price', '$'),
     ('XLY',   'sector', '경기소비재',           'XLY',   'price', '$'),
@@ -41,19 +41,59 @@ ITEMS = [
 ]
 
 
-def get(url, tries=3):
+def log(level, msg):
+    """GitHub Actions 주석으로 남겨 API로 확인 가능하게 함."""
+    print(f'::{level}::{msg}', flush=True)
+
+
+def get(url, tries=2):
     last = None
     for i in range(tries):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=40) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=20) as r:
                 return r.read()
         except Exception as e:  # noqa
             last = e
-            time.sleep(3 * (i + 1))
+            time.sleep(2 * (i + 1))
     raise last
 
 
+def drop_unsettled(sym, pts):
+    """장중 실행 대비: 미국 동부 기준 오늘 봉이 아직 확정 종가가 아니면 제외."""
+    now = datetime.now(timezone.utc)
+    now_et = now - timedelta(hours=4 if is_dst_et(now) else 5)
+    close = (14, 45) if sym.endswith('=F') else (16, 15)
+    if pts and pts[-1][0] == now_et.date().isoformat() and (now_et.hour, now_et.minute) < close:
+        return pts[:-1]
+    return pts
+
+
+YF = {}
+
+
+def yf_all(syms):
+    """yfinance로 한 번에 받기(실패 시 빈 dict)."""
+    try:
+        import yfinance as yf
+        df = yf.download(syms, period='2y', interval='1d', auto_adjust=False, progress=False,
+                         group_by='ticker', threads=True, timeout=30)
+        for sy in syms:
+            try:
+                ser = df[sy]['Close'].dropna()
+                pts = [(ix.date().isoformat(), round(float(v), 4)) for ix, v in ser.items()]
+                pts = drop_unsettled(sy, pts)
+                if len(pts) >= 30:
+                    YF[sy] = pts
+            except Exception as e:  # noqa
+                log('warning', f'yfinance {sy}: {type(e).__name__} {str(e)[:120]}')
+        log('notice', f'yfinance ok {len(YF)}/{len(syms)}')
+    except Exception as e:  # noqa
+        log('warning', f'yfinance 실패: {type(e).__name__} {str(e)[:160]}')
+
+
 def yahoo(sym):
+    if sym in YF:
+        return YF[sym]
     q = urllib.parse.quote(sym)
     err = None
     for host in ('query1', 'query2'):
@@ -69,18 +109,13 @@ def yahoo(sym):
                     continue
                 d = datetime.fromtimestamp(t + off, tz=timezone.utc).date().isoformat()
                 by[d] = round(float(c), 4)
-            pts = sorted(by.items())
-            # 장중 실행 대비: 미국 동부 16:15 이전이면 오늘 봉은 확정 종가가 아니므로 제외
-            now_et = datetime.now(timezone.utc) - timedelta(hours=4 if is_dst_et(datetime.now(timezone.utc)) else 5)
-            if pts and pts[-1][0] == now_et.date().isoformat() and (now_et.hour, now_et.minute) < (16, 15) and not sym.endswith('=F'):
-                pts = pts[:-1]
-            if sym.endswith('=F') and pts and pts[-1][0] == now_et.date().isoformat() and (now_et.hour, now_et.minute) < (14, 45):
-                pts = pts[:-1]
+            pts = drop_unsettled(sym, sorted(by.items()))
             if len(pts) < 30:
                 raise ValueError(f'too few points {len(pts)}')
             return pts
         except Exception as e:  # noqa
             err = e
+            log('warning', f'yahoo {host} {sym}: {type(e).__name__} {str(e)[:120]}')
     raise err
 
 
@@ -94,7 +129,33 @@ def is_dst_et(now_utc):
     return s <= now_utc < e
 
 
+def fred(series_id):
+    txt = get(f'https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}').decode('utf-8-sig')
+    pts = []
+    for r in csv.reader(io.StringIO(txt)):
+        if len(r) < 2 or not r[0][:1].isdigit() or r[1] in ('', '.'):
+            continue
+        pts.append((r[0], round(float(r[1]), 3)))
+    if len(pts) < 30:
+        raise ValueError('fred too few points')
+    return pts
+
+
 def treasury():
+    try:
+        return treasury_gov()
+    except Exception as e:  # noqa
+        log('warning', f'treasury.gov 실패: {type(e).__name__} {str(e)[:120]} — FRED로 대체')
+    out = {}
+    for col, sid in (('2 Yr', 'DGS2'), ('10 Yr', 'DGS10'), ('30 Yr', 'DGS30')):
+        pts = fred(sid)
+        cut = (date.today() - timedelta(days=800)).isoformat()
+        out[col] = [x for x in pts if x[0] >= cut]
+    out['_src'] = 'FRED(미 연준 세인트루이스, 재무부 고시 금리 재게시)'
+    return out
+
+
+def treasury_gov():
     y = datetime.now(timezone.utc).year
     rows = {}
     for yy in (y - 2, y - 1, y):
@@ -122,6 +183,7 @@ def treasury():
         if len(pts) < 30:
             raise ValueError(f'treasury {col} too few points')
         out[col] = pts
+    out['_src'] = '미 재무부 Daily Treasury Par Yield Curve'
     return out
 
 
@@ -172,6 +234,7 @@ def main():
         except Exception:  # noqa
             old = {}
     notes, items = [], []
+    yf_all([x[3] for x in ITEMS if x[4] == 'price'])
     try:
         tre = treasury()
     except Exception as e:  # noqa
@@ -182,10 +245,11 @@ def main():
             if kind == 'yield':
                 if tre is None:
                     raise ValueError('no treasury')
-                pts, src = tre[sym], '미 재무부 Daily Treasury Par Yield Curve'
+                pts, src = tre[sym], tre['_src']
             else:
                 pts, src = yahoo(sym), 'Yahoo Finance 일봉 종가(가격 기준)'
         except Exception as e:  # noqa
+            log('warning', f'{iid} 실패: {type(e).__name__} {str(e)[:120]}')
             if iid in old:
                 items.append(old[iid]); notes.append(f'{name} 수신 실패({type(e).__name__}) — 이전 값 유지')
             else:
@@ -214,7 +278,7 @@ def main():
     data = {'generatedAt': datetime.now(KST).isoformat(timespec='seconds'), **data}
     with open(OUT, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
-    print('asOf', data['asOf'], 'items', len(items), 'notes', notes)
+    log('notice', f"asOf {data['asOf']} items {len(items)} notes {notes}")
     if not items:
         sys.exit(1)
 

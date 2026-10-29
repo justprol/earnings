@@ -17,9 +17,11 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Install
+        run: pip install --quiet yfinance
       - name: Fetch market data
         run: python3 scripts/update_market.py
       - name: Commit
