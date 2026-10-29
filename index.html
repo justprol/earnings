@@ -346,6 +346,17 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
   :root:not([data-theme="light"]) .nart .nsum{border-top-color:var(--on-ink-dim)}}
 @media (max-width:600px){.mast .sub{font-size:11.5px}}
 @media (max-width:820px){.nart{padding:20px 18px 24px}.nart h2{font-size:22px}.nart p{font-size:16px}.mast-in{padding-top:14px}.mast .mark{width:34px;height:34px}.mast h1{font-size:20px}}
+
+/* v2.1: 기사 폭 채우기, 요약 음영 */
+.nart h2,.nart p,.nart .nsum{max-width:none}
+.nart .nsum{background:var(--sunken);border:0;border-left:3px solid var(--ink);border-radius:0 var(--r) var(--r) 0;padding:16px 22px 18px;margin:8px 0 6px}
+.nart .nsum .lab{color:var(--ink);font-weight:700}
+.nart .nsum p{font-size:17px;line-height:1.8}
+.replink{margin-top:10px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:13px;color:var(--muted)}
+.replink span{margin-right:auto}
+.replink button{appearance:none;border:1px solid var(--ink);background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:7px 14px;border-radius:var(--r)}
+.replink button:hover{background:var(--ink-2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .nart .nsum{border-left-color:var(--on-ink-dim)}:root:not([data-theme="light"]) .nart .nsum .lab{color:var(--on-ink)}:root:not([data-theme="light"]) .replink button{background:var(--accent-soft);border-color:var(--line-strong)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -613,9 +624,18 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
   function renderNewsDetail(){
     const el=$('#ndetail');const i=nItems.find(x=>x._id===nSel);
     if(!i){el.innerHTML='<div class="card"><div class="empty"><strong>기사를 선택하세요</strong><span>왼쪽 목록에서 제목을 누르면 내용이 여기에 표시됩니다.</span></div></div>';return;}
-    el.innerHTML=`<button class="back" id="nback">← 목록으로</button><div class="card nart cc${catIdx(i._cat)<9?catIdx(i._cat)+1:0}"><span class="nb">${esc(i._cat)}</span><h2>${esc(i.title)}</h2><div class="nm"><b>${esc(i.source)}</b>　${esc(i.dateLabel||'')}　${esc(i.sector||'')}</div>${i.url?`<a class="orig" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.origTitle||i.url)}</a>`:`<span class="nm">${esc(i.origTitle||'')}</span>`}${i.summary?`<div class="nsum"><div class="lab">요약</div><p>${esc(i.summary)}</p></div>`:''}${(i.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${(i.tickers||[]).length?`<div class="tkr">${i.tickers.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}</div>${i._day&&i._day.note?`<p class="foot" style="margin:0">${esc(i._day.label||'')} · ${esc(i._day.note)}</p>`:''}`;
+    el.innerHTML=`<button class="back" id="nback">← 목록으로</button><div class="card nart cc${catIdx(i._cat)<9?catIdx(i._cat)+1:0}"><span class="nb">${esc(i._cat)}</span><h2>${esc(i.title)}</h2><div class="nm"><b>${esc(i.source)}</b>　${esc(i.dateLabel||'')}　${esc(i.sector||'')}</div>${i.url?`<a class="orig" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.origTitle||i.url)}</a>`:`<span class="nm">${esc(i.origTitle||'')}</span>`}${i.summary?`<div class="nsum"><div class="lab">요약</div><p>${esc(i.summary)}</p></div>`:''}${(i.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${(i.tickers||[]).length?`<div class="tkr">${i.tickers.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}${repLinks(i)}</div>${i._day&&i._day.note?`<p class="foot" style="margin:0">${esc(i._day.label||'')} · ${esc(i._day.note)}</p>`:''}`;
     const b=$('#nback');if(b)b.onclick=()=>document.body.classList.remove('show-detail');
+    el.querySelectorAll('[data-rep]').forEach(x=>x.onclick=()=>openReport(x.dataset.rep));
   }
+  function repFor(t,date){const rs=reports.filter(r=>r.ticker===t);if(!rs.length)return null;const d0=new Date(date+'T12:00:00');
+    const near=rs.filter(r=>r.reportDate&&Math.abs((new Date(r.reportDate+'T12:00:00')-d0)/864e5)<=7);
+    return (near.length?near:rs).sort((a,b)=>(b.reportDate||'').localeCompare(a.reportDate||''))[0];}
+  function repLinks(i){const seen=new Set();const rs=(i.tickers||[]).map(t=>repFor(t,i._date)).filter(r=>r&&!seen.has(r._id)&&seen.add(r._id));
+    if(!rs.length)return '';
+    return `<div class="replink"><span>실적 수치·가이던스·어닝콜은 실적 요약에 정리돼 있습니다.</span>${rs.map(r=>`<button type="button" data-rep="${esc(r._id)}">${esc(r.ticker)} 실적 요약 보기</button>`).join('')}</div>`;}
+  function openReport(id){['#q','#f-sector','#f-list','#f-verdict'].forEach(k=>{const e=$(k);if(e)e.value='';});setTab('reports');select(id);
+    const r=reports.find(x=>x._id===id);if(window.innerWidth>820){const row=document.querySelector(`#list [data-id="${CSS.escape(id)}"]`);if(row)row.scrollIntoView({block:'nearest'});}window.scrollTo({top:0});}
   function nSelect(id){nSel=id;const it=nItems.find(x=>x._id===id);if(it){if(nOpen&&!nOpen.has(it._date))nOpen.add(it._date);nSave();}try{localStorage.setItem('et-nsel',id);}catch(e){}document.body.classList.add('show-detail');renderNews();renderNewsDetail();if(window.innerWidth<=820)window.scrollTo({top:0});}
   $('#nlist').addEventListener('click',e=>{
     const a=e.target.closest('[data-nall]');if(a){const ds=[...document.querySelectorAll('#nlist .daygrp')].map(x=>x.dataset.nday);nOpen=new Set(a.dataset.nall==='1'?ds:[]);nSave();renderNews();return;}
@@ -714,6 +734,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
       calendar=data.calendar||[];lists=data.lists||{};caps=data.marketCaps||{};
       if(!reports.some(r=>r._id===selected)&&window.innerWidth>820&&reports.length){selected=[...reports].sort((a,b)=>(b.reportDate||'').localeCompare(a.reportDate||'')||byCap(a,b))[0]._id;}
       renderSectors();renderCalSectors();renderList();renderDetail();renderCal();renderStats();
+      if(typeof renderNewsDetail==='function')renderNewsDetail();
     }catch(e){$('#list').innerHTML='<div class="empty"><strong>데이터를 불러오지 못함</strong><span>잠시 후 새로고침해 주세요.</span></div>';}
   })();
 })();
