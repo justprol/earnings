@@ -220,6 +220,9 @@ details.memo a{color:var(--accent);word-break:break-all}
 .nart .nm b{font-weight:600;color:var(--fg)}
 .nart a.orig{font-size:14px;color:var(--accent);text-decoration:underline;text-underline-offset:2px;word-break:break-word}
 .nart p{margin:0;font-size:15.5px;line-height:1.85;max-width:72ch}
+.nart .nsum{border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;padding:12px 16px;max-width:72ch}
+.nart .nsum .lab{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:2px}
+.nart .nsum p{font-weight:600;font-size:15.5px;line-height:1.7}
 .nart .tkr{display:flex;flex-wrap:wrap;gap:4px}
 .nart .tkr span{font-family:var(--f-num);font-size:12px;font-weight:600;padding:1px 7px;border-radius:4px;background:var(--sunken);border:1px solid var(--line);color:var(--muted)}
 .foot{color:var(--faint);font-size:12px}
@@ -476,7 +479,7 @@ details.memo a{color:var(--accent);word-break:break-all}
   try{nSel=localStorage.getItem('et-nsel');const o=JSON.parse(localStorage.getItem('et-nopen')||'null');if(Array.isArray(o))nOpen=new Set(o);const c=JSON.parse(localStorage.getItem('et-ncat')||'[]');if(Array.isArray(c))nCatClosed=new Set(c);}catch(e){}
   const nSave=()=>{try{localStorage.setItem('et-nopen',JSON.stringify([...nOpen]));localStorage.setItem('et-ncat',JSON.stringify([...nCatClosed]));}catch(e){}};
   function nFiltered(){const q=$('#nq').value.trim().toLowerCase(),cf=$('#n-cat').value;
-    return nItems.filter(i=>(!cf||i._cat===cf)&&(!q||[i.title,i.source,i.origTitle,i.sector,(i.tickers||[]).join(' '),(i.body||[]).join(' ')].join(' ').toLowerCase().includes(q)));}
+    return nItems.filter(i=>(!cf||i._cat===cf)&&(!q||[i.title,i.summary,i.source,i.origTitle,i.sector,(i.tickers||[]).join(' '),(i.body||[]).join(' ')].join(' ').toLowerCase().includes(q)));}
   function renderNews(){
     const el=$('#nlist');
     if(!nItems.length){el.innerHTML='<div class="empty"><strong>아직 정리된 뉴스 없음</strong><span>매일 아침 자동 실행이 전날 뉴스를 추가합니다.</span></div>';renderNewsDetail();return;}
@@ -498,7 +501,7 @@ details.memo a{color:var(--accent);word-break:break-all}
   function renderNewsDetail(){
     const el=$('#ndetail');const i=nItems.find(x=>x._id===nSel);
     if(!i){el.innerHTML='<div class="card"><div class="empty"><strong>기사를 선택하세요</strong><span>왼쪽 목록에서 제목을 누르면 내용이 여기에 표시됩니다.</span></div></div>';return;}
-    el.innerHTML=`<button class="back" id="nback">← 목록으로</button><div class="card nart"><span class="chip acc" style="align-self:flex-start">${esc(i._cat)}</span><h2>${esc(i.title)}</h2><div class="nm"><b>${esc(i.source)}</b> | ${esc(i.dateLabel||'')} | ${esc(i.sector||'')}</div>${i.url?`<a class="orig" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.origTitle||i.url)}</a>`:`<span class="nm">${esc(i.origTitle||'')}</span>`}${(i.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${(i.tickers||[]).length?`<div class="tkr">${i.tickers.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}</div>${i._day&&i._day.note?`<p class="foot" style="margin:0">${esc(i._day.label||'')} · ${esc(i._day.note)}</p>`:''}`;
+    el.innerHTML=`<button class="back" id="nback">← 목록으로</button><div class="card nart"><span class="chip acc" style="align-self:flex-start">${esc(i._cat)}</span><h2>${esc(i.title)}</h2><div class="nm"><b>${esc(i.source)}</b> | ${esc(i.dateLabel||'')} | ${esc(i.sector||'')}</div>${i.url?`<a class="orig" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.origTitle||i.url)}</a>`:`<span class="nm">${esc(i.origTitle||'')}</span>`}${i.summary?`<div class="nsum"><div class="lab">요약</div><p>${esc(i.summary)}</p></div>`:''}${(i.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${(i.tickers||[]).length?`<div class="tkr">${i.tickers.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}</div>${i._day&&i._day.note?`<p class="foot" style="margin:0">${esc(i._day.label||'')} · ${esc(i._day.note)}</p>`:''}`;
     const b=$('#nback');if(b)b.onclick=()=>document.body.classList.remove('show-detail');
   }
   function nSelect(id){nSel=id;const it=nItems.find(x=>x._id===id);if(it){if(nOpen&&!nOpen.has(it._date))nOpen.add(it._date);nCatClosed.delete(it._date+'|'+it._cat);nSave();}try{localStorage.setItem('et-nsel',id);}catch(e){}document.body.classList.add('show-detail');renderNews();renderNewsDetail();if(window.innerWidth<=820)window.scrollTo({top:0});}
