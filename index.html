@@ -70,7 +70,7 @@ nav.tabs.sub2 .glossbtn{margin-bottom:0}
 
 /* 목록 */
 .split{display:grid;grid-template-columns:minmax(280px,350px) minmax(0,1fr);gap:16px;align-items:start}
-.list{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;max-height:calc(100vh - 200px);overflow-y:auto;position:sticky;top:12px}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;position:sticky;top:12px}
 .listbar{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);background:var(--surface)}
 .listbar span{margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .listbar button{white-space:nowrap;appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);font-size:12px;padding:2px 9px;border-radius:999px}
@@ -737,6 +737,62 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
       if(typeof renderNewsDetail==='function')renderNewsDetail();
     }catch(e){$('#list').innerHTML='<div class="empty"><strong>데이터를 불러오지 못함</strong><span>잠시 후 새로고침해 주세요.</span></div>';}
   })();
+})();
+</script>
+<script>
+/* 연결형 부드러운 스크롤: 목록 위에서 휠을 굴려도 페이지가 먼저 올라가 목록이 화면 상단에 붙은 뒤 목록이 스크롤되고,
+   목록 끝에 닿으면 다시 페이지로 이어짐. 휠 입력은 관성 감속으로 보간. */
+(function(){
+  const STICK=12;                         // .list sticky top(px)
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU=reduce?0:110;                 // 감속 시간상수(ms), 클수록 더 미끄러짐
+  const win=document.scrollingElement||document.documentElement;
+  const S=new Map();                      // el -> {pos,target,raf,last,t}
+  const max=el=>Math.max(0,el.scrollHeight-el.clientHeight);
+  function st(el){let s=S.get(el);if(!s||!s.raf){const p=el.scrollTop;s={pos:p,target:p,raf:0,last:p,t:0};S.set(el,s);}return s;}
+  function tick(el,now){
+    const s=S.get(el);
+    if(Math.abs(el.scrollTop-s.last)>2){s.raf=0;return;}          // 키보드·스크롤바·코드 이동이 끼어들면 양보
+    const dt=s.t?Math.min(64,now-s.t):16;s.t=now;
+    s.target=Math.min(max(el),Math.max(0,s.target));
+    const k=TAU?1-Math.exp(-dt/TAU):1;
+    s.pos+=(s.target-s.pos)*k;
+    if(Math.abs(s.target-s.pos)<0.4)s.pos=s.target;
+    el.scrollTop=s.pos;s.last=el.scrollTop;
+    s.raf=s.pos===s.target?0:requestAnimationFrame(t=>tick(el,t));
+  }
+  function push(el,dy){if(!dy)return;const s=st(el);s.target=Math.min(max(el),Math.max(0,s.target+dy));if(!s.raf){s.t=0;s.raf=requestAnimationFrame(t=>tick(el,t));}}
+  function room(el,dy){const s=st(el);return dy>0?max(el)-s.target:-s.target;}   // 남은 이동량(+/-)
+  function otherScroller(node,stop){
+    for(let n=node;n&&n!==stop&&n!==document.body;n=n.parentElement){
+      const oy=getComputedStyle(n).overflowY;
+      if((oy==='auto'||oy==='scroll')&&n.scrollHeight>n.clientHeight+1)return n;
+    }return null;
+  }
+  addEventListener('wheel',e=>{
+    if(e.ctrlKey||e.defaultPrevented)return;                      // 핀치 줌 등은 기본 동작
+    if(Math.abs(e.deltaX)>Math.abs(e.deltaY))return;               // 가로 스크롤(표)은 기본 동작
+    let dy=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);
+    if(!dy)return;
+    const list=innerWidth>820?e.target.closest('.list'):null;
+    const inner=otherScroller(e.target,list);
+    if(inner&&inner!==list)return;                                 // 그 외 내부 스크롤 영역은 기본 동작
+    e.preventDefault();
+    if(!list||max(list)<1){push(win,dy);return;}
+    if(dy>0){
+      // 1) 목록이 상단에 붙을 때까지 페이지를 먼저 내림
+      const split=list.parentElement;
+      const stickAt=split.getBoundingClientRect().top+win.scrollTop-STICK;
+      const ws=st(win);const toStick=Math.max(0,Math.min(stickAt-ws.target,max(win)-ws.target));
+      const a=Math.min(dy,toStick);push(win,a);dy-=a;
+      // 2) 목록 스크롤  3) 목록 끝이면 나머지는 페이지로
+      const b=Math.min(dy,room(list,1));push(list,b);dy-=b;
+      push(win,dy);
+    }else{
+      const b=Math.max(dy,room(list,-1));push(list,b);dy-=b;     // 목록을 위로 끝까지 올린 뒤 페이지로
+      push(win,dy);
+    }
+  },{passive:false});
 })();
 </script>
 
