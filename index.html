@@ -207,7 +207,11 @@ details.memo a{color:var(--accent);word-break:break-all}
 @media (max-width:640px){.calday{grid-template-columns:minmax(0,1fr)}.calday .d{flex-direction:row;gap:8px;align-items:baseline;border-right:0;border-bottom:1px solid var(--line)}.ev{grid-template-columns:56px minmax(0,1fr) auto}.ev .tm{display:none}}
 
 /* 시장 뉴스 */
-.ncat-h{padding:6px 14px;font-size:11.5px;font-weight:700;color:var(--accent);background:var(--surface);border-bottom:1px solid var(--line);letter-spacing:.02em}
+.ncat-h{appearance:none;width:100%;border:0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:7px 14px 7px 22px;font-size:12.5px;font-weight:700;color:var(--accent);background:var(--surface);text-align:left}
+.ncat-h:hover{background:var(--sunken)}
+.ncat-h .car{display:inline-block;width:10px;color:var(--muted);transition:transform .15s}
+.ncat-h[aria-expanded="true"] .car{transform:rotate(90deg)}
+.ncat-h .cnt{margin-left:auto;font-family:var(--f-num);font-size:11.5px;font-weight:600;color:var(--muted)}
 .row .src{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .src b{font-weight:600;color:var(--fg)}
 .row .nt{font-size:14px;font-weight:600;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -218,9 +222,6 @@ details.memo a{color:var(--accent);word-break:break-all}
 .nart p{margin:0;font-size:15.5px;line-height:1.85;max-width:72ch}
 .nart .tkr{display:flex;flex-wrap:wrap;gap:4px}
 .nart .tkr span{font-family:var(--f-num);font-size:12px;font-weight:600;padding:1px 7px;border-radius:4px;background:var(--sunken);border:1px solid var(--line);color:var(--muted)}
-.nart .pager{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:12px}
-.nart .pager button{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);font-size:13px;padding:6px 12px;border-radius:6px;max-width:48%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nart .pager button:disabled{opacity:.4;cursor:default}
 .foot{color:var(--faint);font-size:12px}
 @media (max-width:900px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:820px){
@@ -471,9 +472,9 @@ details.memo a{color:var(--accent);word-break:break-all}
   setTab(location.hash==='#calendar'?'cal':location.hash==='#earnings'?'reports':'news');
 
   /* 시장 뉴스 */
-  let news=[],nItems=[],nSel=null,nOpen=null;
-  try{nSel=localStorage.getItem('et-nsel');const o=JSON.parse(localStorage.getItem('et-nopen')||'null');if(Array.isArray(o))nOpen=new Set(o);}catch(e){}
-  const nSave=()=>{try{localStorage.setItem('et-nopen',JSON.stringify([...nOpen]));}catch(e){}};
+  let news=[],nItems=[],nSel=null,nOpen=null,nCatClosed=new Set();
+  try{nSel=localStorage.getItem('et-nsel');const o=JSON.parse(localStorage.getItem('et-nopen')||'null');if(Array.isArray(o))nOpen=new Set(o);const c=JSON.parse(localStorage.getItem('et-ncat')||'[]');if(Array.isArray(c))nCatClosed=new Set(c);}catch(e){}
+  const nSave=()=>{try{localStorage.setItem('et-nopen',JSON.stringify([...nOpen]));localStorage.setItem('et-ncat',JSON.stringify([...nCatClosed]));}catch(e){}};
   function nFiltered(){const q=$('#nq').value.trim().toLowerCase(),cf=$('#n-cat').value;
     return nItems.filter(i=>(!cf||i._cat===cf)&&(!q||[i.title,i.source,i.origTitle,i.sector,(i.tickers||[]).join(' '),(i.body||[]).join(' ')].join(' ').toLowerCase().includes(q)));}
   function renderNews(){
@@ -486,25 +487,27 @@ details.memo a{color:var(--accent);word-break:break-all}
     let html=`<div class="listbar"><span>날짜 ${days.length}개 · ${rows.length}건</span><button data-nall="1">모두 펼치기</button><button data-nall="0">모두 접기</button></div>`;
     for(const g of days){const open=filtering||nOpen.has(g.d);const dt=new Date(g.d+'T12:00:00');
       html+=`<button class="daygrp" data-nday="${esc(g.d)}" aria-expanded="${open}"><span class="car">▸</span>${esc(g.d.slice(5).replace('-','/'))} <span class="dw">${DOWK[dt.getDay()]}요일 뉴스</span><span class="cnt"><b>${g.rows.length}건</b></span></button>`;
-      if(!open)continue;let cat=null;
-      for(const i of g.rows){if(i._cat!==cat){cat=i._cat;html+=`<div class="ncat-h">${esc(cat)}</div>`;}
-        html+=`<div class="row" tabindex="0" role="button" data-nid="${esc(i._id)}" aria-current="${i._id===nSel}"><span class="nt">${esc(i.title)}</span><span class="src"><b>${esc(i.source)}</b> · ${esc(i.sector||'')}</span></div>`;}}
+      if(!open)continue;
+      const cats=[];g.rows.forEach(i=>{const c=cats[cats.length-1];if(c&&c.name===i._cat)c.rows.push(i);else cats.push({name:i._cat,rows:[i]});});
+      for(const c of cats){const key=g.d+'|'+c.name,co=filtering||!nCatClosed.has(key);
+        html+=`<button class="ncat-h" data-ncat="${esc(key)}" aria-expanded="${co}"><span class="car">▸</span>${esc(c.name)}<span class="cnt">${c.rows.length}</span></button>`;
+        if(!co)continue;
+        for(const i of c.rows)html+=`<div class="row" tabindex="0" role="button" data-nid="${esc(i._id)}" aria-current="${i._id===nSel}"><span class="nt">${esc(i.title)}</span><span class="src"><b>${esc(i.source)}</b> · ${esc(i.sector||'')}</span></div>`;}}
     el.innerHTML=html;
   }
   function renderNewsDetail(){
     const el=$('#ndetail');const i=nItems.find(x=>x._id===nSel);
     if(!i){el.innerHTML='<div class="card"><div class="empty"><strong>기사를 선택하세요</strong><span>왼쪽 목록에서 제목을 누르면 내용이 여기에 표시됩니다.</span></div></div>';return;}
-    const rows=nFiltered(),k=rows.findIndex(x=>x._id===i._id),prev=rows[k-1],next=rows[k+1];
-    el.innerHTML=`<button class="back" id="nback">← 목록으로</button><div class="card nart"><span class="chip acc" style="align-self:flex-start">${esc(i._cat)}</span><h2>${esc(i.title)}</h2><div class="nm"><b>${esc(i.source)}</b> | ${esc(i.dateLabel||'')} | ${esc(i.sector||'')}</div>${i.url?`<a class="orig" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.origTitle||i.url)}</a>`:`<span class="nm">${esc(i.origTitle||'')}</span>`}${(i.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${(i.tickers||[]).length?`<div class="tkr">${i.tickers.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}<div class="pager"><button data-ngo="${prev?esc(prev._id):''}" ${prev?'':'disabled'}>‹ ${prev?esc(prev.title):'처음 기사'}</button><button data-ngo="${next?esc(next._id):''}" ${next?'':'disabled'}>${next?esc(next.title):'마지막 기사'} ›</button></div></div>${i._day&&i._day.note?`<p class="foot" style="margin:0">${esc(i._day.label||'')} · ${esc(i._day.note)}</p>`:''}`;
+    el.innerHTML=`<button class="back" id="nback">← 목록으로</button><div class="card nart"><span class="chip acc" style="align-self:flex-start">${esc(i._cat)}</span><h2>${esc(i.title)}</h2><div class="nm"><b>${esc(i.source)}</b> | ${esc(i.dateLabel||'')} | ${esc(i.sector||'')}</div>${i.url?`<a class="orig" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.origTitle||i.url)}</a>`:`<span class="nm">${esc(i.origTitle||'')}</span>`}${(i.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${(i.tickers||[]).length?`<div class="tkr">${i.tickers.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}</div>${i._day&&i._day.note?`<p class="foot" style="margin:0">${esc(i._day.label||'')} · ${esc(i._day.note)}</p>`:''}`;
     const b=$('#nback');if(b)b.onclick=()=>document.body.classList.remove('show-detail');
   }
-  function nSelect(id){nSel=id;const it=nItems.find(x=>x._id===id);if(it&&nOpen&&!nOpen.has(it._date)){nOpen.add(it._date);nSave();}try{localStorage.setItem('et-nsel',id);}catch(e){}document.body.classList.add('show-detail');renderNews();renderNewsDetail();if(window.innerWidth<=820)window.scrollTo({top:0});}
+  function nSelect(id){nSel=id;const it=nItems.find(x=>x._id===id);if(it){if(nOpen&&!nOpen.has(it._date))nOpen.add(it._date);nCatClosed.delete(it._date+'|'+it._cat);nSave();}try{localStorage.setItem('et-nsel',id);}catch(e){}document.body.classList.add('show-detail');renderNews();renderNewsDetail();if(window.innerWidth<=820)window.scrollTo({top:0});}
   $('#nlist').addEventListener('click',e=>{
-    const a=e.target.closest('[data-nall]');if(a){const ds=[...document.querySelectorAll('#nlist .daygrp')].map(x=>x.dataset.nday);nOpen=new Set(a.dataset.nall==='1'?ds:[]);nSave();renderNews();return;}
+    const a=e.target.closest('[data-nall]');if(a){const ds=[...document.querySelectorAll('#nlist .daygrp')].map(x=>x.dataset.nday);nOpen=new Set(a.dataset.nall==='1'?ds:[]);if(a.dataset.nall==='1')nCatClosed.clear();nSave();renderNews();return;}
+    const ch=e.target.closest('[data-ncat]');if(ch){const k=ch.dataset.ncat;if(nCatClosed.has(k))nCatClosed.delete(k);else nCatClosed.add(k);nSave();renderNews();return;}
     const h=e.target.closest('[data-nday]');if(h){const d=h.dataset.nday;if(nOpen.has(d))nOpen.delete(d);else nOpen.add(d);nSave();renderNews();return;}
     const r=e.target.closest('[data-nid]');if(r)nSelect(r.dataset.nid);});
   $('#nlist').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const r=e.target.closest('[data-nid]');if(r){e.preventDefault();nSelect(r.dataset.nid);}}});
-  $('#ndetail').addEventListener('click',e=>{const b=e.target.closest('[data-ngo]');if(b&&b.dataset.ngo)nSelect(b.dataset.ngo);});
   ['#nq','#n-cat'].forEach(s=>$(s).addEventListener('input',()=>{renderNews();renderNewsDetail();}));
   (async()=>{try{const r=await fetch('news.json?v='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;const d=await r.json();news=(d.days||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));}catch(e){news=[];}
     nItems=[];const cats=[];news.forEach(day=>(day.categories||[]).forEach(c=>{if(!cats.includes(c.name))cats.push(c.name);(c.items||[]).forEach((it,k)=>nItems.push(Object.assign({_id:day.date+'|'+c.name+'|'+k,_date:day.date,_cat:c.name,_day:day},it)));}));
