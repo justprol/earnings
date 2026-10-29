@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>글로벌자산운용실 실적 트래커</title>
+<title>글로벌 마켓 데스크</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -51,6 +51,11 @@ h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.01em}
 nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);align-items:flex-end}
 nav.tabs [role=tab]{appearance:none;border:0;background:none;color:var(--muted);font-weight:600;padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px}
 nav.tabs [role=tab][aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+nav.tabs.main [role=tab]{font-size:17px;padding:10px 18px}
+nav.tabs.sub2{border-bottom:0;gap:6px;margin-top:-6px}
+nav.tabs.sub2 [role=tab]{font-size:13.5px;padding:5px 12px;border:1px solid var(--line-strong);border-radius:999px;margin-bottom:0;background:var(--surface)}
+nav.tabs.sub2 [role=tab][aria-selected="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+nav.tabs.sub2 .glossbtn{margin-bottom:0}
 .glossbtn{margin-left:auto;appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);font-size:13px;padding:5px 12px;border-radius:999px;margin-bottom:6px}
 .gloss{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 24px;font-size:14px}
 .gloss b{display:block;font-size:13px;color:var(--accent)}
@@ -238,10 +243,10 @@ details.memo a{color:var(--accent);word-break:break-all}
 <div class="wrap">
   <header class="top">
     <div>
-      <h1>실적 트래커</h1>
-      <p class="sub">글로벌자산운용실 Database 탭 미국 상장 종목 · 매일 07:30 / 24:00(한국시간) 자동 갱신 · 시장 뉴스 화~토 06:43</p>
+      <h1>글로벌 마켓 데스크</h1>
+      <p class="sub" id="subline">글로벌자산운용실 · 뉴스 화~토 06:43 · 실적 매일 07:30 / 24:00 (한국시간) 자동 갱신</p>
     </div>
-    <div class="stats" aria-label="트래커 상태">
+    <div class="stats" id="stats" aria-label="실적 정리 상태" hidden>
       <div class="stat"><b id="st-univ">–</b><span>추적 종목</span></div>
       <div class="stat"><b id="st-done">–</b><span>정리 완료</span></div>
       <div class="stat"><b id="st-wait">–</b><span>정리 대기</span></div>
@@ -249,10 +254,13 @@ details.memo a{color:var(--accent);word-break:break-all}
     </div>
   </header>
 
-  <nav class="tabs" role="tablist">
+  <nav class="tabs main" role="tablist" aria-label="메뉴">
+    <button id="tab-news" role="tab" aria-selected="true" aria-controls="view-news">뉴스</button>
+    <button id="tab-earn" role="tab" aria-selected="false">실적</button>
+  </nav>
+  <nav class="tabs sub2" id="subnav" role="tablist" aria-label="실적 메뉴" hidden>
     <button id="tab-reports" role="tab" aria-selected="true" aria-controls="view-reports">실적 요약</button>
     <button id="tab-cal" role="tab" aria-selected="false" aria-controls="view-cal">발표 일정</button>
-    <button id="tab-news" role="tab" aria-selected="false" aria-controls="view-news">시장 뉴스</button>
     <button class="glossbtn" id="glossbtn" aria-expanded="false" aria-controls="gloss">용어 설명</button>
   </nav>
 
@@ -269,7 +277,7 @@ details.memo a{color:var(--accent);word-break:break-all}
     <div><b>시간외·장전 반응</b>정규장 밖 거래에서의 주가 변화. 거래량이 적어 정규장에서 방향이 바뀌기도 함.</div>
   </section>
 
-  <div id="view-reports" role="tabpanel" aria-labelledby="tab-reports" style="display:flex;flex-direction:column;gap:12px">
+  <div id="view-reports" role="tabpanel" aria-labelledby="tab-reports" hidden style="flex-direction:column;gap:12px">
     <div class="toolbar">
       <input id="q" type="search" placeholder="티커·종목명 검색" aria-label="검색">
       <select id="f-sector" aria-label="섹터"><option value="">전체 섹터</option></select>
@@ -305,7 +313,7 @@ details.memo a{color:var(--accent);word-break:break-all}
     <details class="memo" id="undated" hidden><summary></summary><p class="calnote" style="margin:0 0 8px">아래 종목은 아직 발표일을 확인하지 못함. 자동 실행이 회사 IR 공지를 확인하는 대로 일정표에 추가됨.</p><div class="tk-cloud" id="undated-list"></div></details>
   </div>
 
-  <div id="view-news" role="tabpanel" aria-labelledby="tab-news" hidden style="flex-direction:column;gap:12px">
+  <div id="view-news" role="tabpanel" aria-labelledby="tab-news" style="display:flex;flex-direction:column;gap:12px">
     <div class="toolbar">
       <input id="nq" type="search" placeholder="제목·매체·티커 검색" aria-label="뉴스 검색">
       <select id="n-cat" aria-label="분류"><option value="">전체 분류</option></select>
@@ -448,10 +456,17 @@ details.memo a{color:var(--accent);word-break:break-all}
     const r=e.target.closest('.row');if(r)select(r.dataset.id);});
   $('#list').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const r=e.target.closest('.row');if(r){e.preventDefault();select(r.dataset.id);}}});
   ['#q','#f-sector','#f-verdict','#f-list'].forEach(s=>$(s).addEventListener('input',renderList));
-  function setTab(w){[['reports','#tab-reports','#view-reports'],['cal','#tab-cal','#view-cal'],['news','#tab-news','#view-news']].forEach(([k,t,v])=>{const on=k===w;$(t).setAttribute('aria-selected',on);$(v).hidden=!on;$(v).style.display=on?'flex':'';});try{history.replaceState(null,'',w==='cal'?'#calendar':w==='news'?'#news':location.pathname+location.search);}catch(e){}}
-  $('#tab-reports').onclick=()=>setTab('reports');$('#tab-cal').onclick=()=>setTab('cal');$('#tab-news').onclick=()=>setTab('news');
-  if(location.hash==='#calendar')setTab('cal');
-  if(location.hash==='#news')setTab('news');
+  let earnSub='reports';try{earnSub=localStorage.getItem('et-sub')||'reports';}catch(e){}
+  function setTab(w){
+    [['reports','#tab-reports','#view-reports'],['cal','#tab-cal','#view-cal'],['news','#tab-news','#view-news']].forEach(([k,t,v])=>{const on=k===w;$(t).setAttribute('aria-selected',on);$(v).hidden=!on;$(v).style.display=on?'flex':'';});
+    const earn=w!=='news';$('#tab-earn').setAttribute('aria-selected',earn);$('#subnav').hidden=!earn;$('#stats').hidden=!earn;
+    if(!earn){document.body.classList.remove('show-detail');$('#gloss').hidden=true;$('#glossbtn').setAttribute('aria-expanded',false);}
+    if(earn){earnSub=w;try{localStorage.setItem('et-sub',w);}catch(e){}}
+    try{history.replaceState(null,'',w==='cal'?'#calendar':w==='reports'?'#earnings':'#news');}catch(e){}
+  }
+  $('#tab-news').onclick=()=>setTab('news');$('#tab-earn').onclick=()=>setTab(earnSub==='cal'?'cal':'reports');
+  $('#tab-reports').onclick=()=>setTab('reports');$('#tab-cal').onclick=()=>setTab('cal');
+  setTab(location.hash==='#calendar'?'cal':location.hash==='#earnings'?'reports':'news');
 
   /* 시장 뉴스 */
   let news=[],nDay=null;
