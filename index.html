@@ -501,6 +501,9 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
 .chip.acc{background:var(--flat-soft);color:var(--fg)}
 .mkc[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .nart .nsum{border-left-color:var(--ink)}:root:not([data-theme="light"]) .nart .nsum .lab{color:var(--muted)}:root:not([data-theme="light"]) .replink button{background:var(--ink);border-color:var(--ink);color:var(--on-ink-fg)}:root:not([data-theme="light"]) .conclusion,:root:not([data-theme="light"]) .row[aria-current="true"]{border-left-color:var(--ink)}}
+.emeta{margin-left:auto;align-self:center;font-size:12.5px;color:var(--faint);white-space:nowrap}
+nav.tabs.sub2 .emeta+.glossbtn{margin-left:8px}
+@media (max-width:600px){.emeta{display:none}}
 </style>
 </head>
 <body>
@@ -529,6 +532,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
   <nav class="tabs sub2" id="subnav" role="tablist" aria-label="실적 메뉴" hidden>
     <button id="tab-reports" role="tab" aria-selected="true" aria-controls="view-reports">실적 요약</button>
     <button id="tab-cal" role="tab" aria-selected="false" aria-controls="view-cal">발표 일정</button>
+    <span class="emeta" id="emeta"></span>
     <button class="glossbtn" id="glossbtn" aria-expanded="false" aria-controls="gloss">용어 설명</button>
   </nav>
 
@@ -776,7 +780,7 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
     [['reports','#tab-reports','#view-reports'],['cal','#tab-cal','#view-cal'],['news','#tab-news','#view-news'],['market','#tab-mkt','#view-market']].forEach(([k,t,v])=>{const on=k===w;$(t).setAttribute('aria-selected',on);$(v).hidden=!on;$(v).style.display=on?'flex':'';});
     $('#foot-earn').hidden=w==='market'||w==='news';
     if(w==='market')renderMarket();
-    document.body.classList.remove('show-detail');const earn=w==='reports'||w==='cal';$('#tab-earn').setAttribute('aria-selected',earn);$('#subnav').hidden=!earn;$('#stats').hidden=!earn;
+    document.body.classList.remove('show-detail');const earn=w==='reports'||w==='cal';$('#tab-earn').setAttribute('aria-selected',earn);$('#subnav').hidden=!earn;$('#stats').hidden=true;
     if(!earn){document.body.classList.remove('show-detail');$('#gloss').hidden=true;$('#glossbtn').setAttribute('aria-expanded',false);}
     if(earn){earnSub=w;try{localStorage.setItem('et-sub',w);}catch(e){}}
     syncHash();
@@ -917,6 +921,9 @@ nav.tabs.sub2 [role=tab][aria-selected="true"]{background:none;color:var(--fg);b
     $('#st-done').textContent=reports.length;
     $('#st-wait').textContent=meta&&Array.isArray(meta.pending)?meta.pending.length:0;
     $('#st-last').textContent=meta?fmtKST(meta.lastRun):'–';
+    const pend=meta&&Array.isArray(meta.pending)?meta.pending.length:0;
+    $('#emeta').textContent=meta?`갱신 ${fmtKST(meta.lastRun)}${pend?` · 정리 대기 ${pend}종목`:''}`:'';
+    $('#emeta').title=meta?`추적 ${meta.universeCount??'–'}종목 · 정리 완료 ${reports.length}건`:'';
   }
   document.addEventListener('click',e=>{
     const st=e.target.closest('[data-star]');if(st){e.preventDefault();toggleWatch(st.dataset.star);return;}
